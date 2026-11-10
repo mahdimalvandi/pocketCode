@@ -9,7 +9,10 @@
 - Added JVM unit tests for English/Persian wake-phrase normalization, false-positive rejection, signed PCM RMS calculation, the voice-activity threshold, trailing-silence timer boundaries/resets, WAV metadata and sample payload. CI now runs these tests, Android lint, JavaScript syntax validation and the debug APK build.
 - Added a generation guard so wake transcription is cancelled when the app is paused/destroyed or wake mode is disabled; a result is not forwarded to the Agent after the foreground session is invalidated.
 - **Still requires a physical device:** install/launch, recognizer language availability, real Persian wake phrase precision, mic handoff, actual AudioRecord silence detection, 9Router/Gemini audio transcription and end-to-end Agent submission.
-- The checked-in APK remains v0.5.0; do not install it expecting the new wake-word feature until a candidate APK is built and validated.
+- Final GitHub Actions PR run 51 on commit `8741d86345a5a57d2dd006616336655494b9f4ca` passed: `node --check`, all 17 JVM tests (0 failures/errors/skips), `lintDebug`, `assembleDebug`, APK signature verification, package/version metadata check and ZIP integrity check.
+- Android Lint reports 13 non-blocking warnings: broad shared-storage permission policy, eight synchronous `SharedPreferences.commit()` calls, target-SDK freshness, WebView JavaScript enablement, missing data-extraction rules and missing application icon. No Lint errors remain.
+- Candidate debug APK was uploaded as the `pocket-code-debug-apk` workflow artifact for run [42788994845](https://github.com/mahdimalvandi/pocketCode/actions/runs/42788994845). The checked-in `dist/pocket-code-debug.apk` is still v0.5.0; use the CI artifact for the v0.6.0 wake-word candidate.
+- **Still requires a physical device:** install/launch, recognizer language availability, real Persian wake phrase precision, mic handoff, actual AudioRecord silence detection, 9Router/Gemini audio transcription and end-to-end Agent submission.
 
 # Verification log
 
