@@ -251,7 +251,7 @@ public final class MainActivity extends Activity {
                 }
                 if(!foreground)throw friendly("برای ضبط به اپ برگرد.");
                 if(voiceRecorder!=null)throw friendly("ضبط دیگری فعال است.");
-                voiceRecorder=new VoiceRecorder();
+                voiceRecorder=new VoiceRecorder(this);
                 try{voiceRecorder.start();}catch(Exception e){voiceRecorder=null;throw friendly("میکروفن در دسترس نیست.");}
                 result=new JSONObject().put("ok",true);break;
             case "voiceCancel":
@@ -810,7 +810,7 @@ public final class MainActivity extends Activity {
             ToneGenerator tone = new ToneGenerator(AudioManager.STREAM_NOTIFICATION,75);
             tone.startTone(ToneGenerator.TONE_PROP_BEEP,140);
             mainHandler.postDelayed(tone::release,250);
-            voiceRecorder=new VoiceRecorder();
+            voiceRecorder=new VoiceRecorder(this);
             wakeCommandRecording=true;
             notifyWeb("wakeStatus","بوق را شنیدی؟ حالا فرمانت را بگو؛ بعد از مکث کوتاه خودکار ارسال می‌شود.");
             voiceRecorder.startUntilSilence(30,1600,
