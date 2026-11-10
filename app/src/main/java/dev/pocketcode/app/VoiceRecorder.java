@@ -42,20 +42,16 @@ final class VoiceRecorder {
         running=true;
         thread=new Thread(()->{
             byte[] data=new byte[2048];
-            boolean speechDetected=false;
-            long lastSpeechNanos=System.nanoTime();
+            TrailingSilenceDetector silenceDetector=trailingSilenceMillis>0
+                    ?new TrailingSilenceDetector(trailingSilenceMillis):null;
             int maximumBytes=16000*2*maximumSeconds;
             while(running&&pcm.size()<maximumBytes){
                 int n=recorder.read(data,0,Math.min(data.length,maximumBytes-pcm.size()));
                 if(n<0){failure="Microphone read failed.";break;}
                 if(n>0){
-                    if(trailingSilenceMillis>0){
-                        long now=System.nanoTime();
-                        if(hasSpeech(data,n)){speechDetected=true;lastSpeechNanos=now;}
-                        else if(speechDetected && now-lastSpeechNanos>=trailingSilenceMillis*1_000_000L){
-                            pcm.write(data,0,n);
-                            break;
-                        }
+                    if(silenceDetector!=null && silenceDetector.shouldStop(data,n,System.nanoTime())){
+                        pcm.write(data,0,n);
+                        break;
                     }
                     pcm.write(data,0,n);
                 }
