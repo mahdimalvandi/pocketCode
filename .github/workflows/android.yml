@@ -38,7 +38,21 @@ jobs:
       - run: gradle testDebugUnitTest --no-daemon
       - run: gradle lintDebug --no-daemon
       - run: gradle assembleDebug --no-daemon
+      - name: Verify debug APK
+        run: |
+          APK=app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$APK"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -F "package: name='dev.pocketcode.app' versionCode='6' versionName='0.6.0'"
+          unzip -t "$APK"
       - uses: actions/upload-artifact@v4
         with:
           name: pocket-code-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pocket-code-verification-reports
+          path: |
+            app/build/test-results/testDebugUnitTest/*.xml
+            app/build/reports/lint-results-debug.html
+          if-no-files-found: warn
