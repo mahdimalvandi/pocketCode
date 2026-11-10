@@ -6,7 +6,8 @@
 - `node --check app/src/main/assets/app.js`.
 - `gradle testDebugUnitTest` (wake-phrase normalization, PCM RMS threshold, trailing-silence state transitions, WAV header/encoding).
 - `gradle lintDebug` and `gradle assembleDebug`.
-- Compile/sign via `build-apk.sh`; verify APK v2/v3 signatures and version metadata.
+- Verify debug APK with `apksigner`, confirm package/version metadata with `aapt dump badging`, and check ZIP integrity with `unzip -t`.
+- CI uploads JUnit XML and the Android Lint HTML report for inspection.
 - Scan staged text/binaries and decompressed APK entries for configured credential without printing it.
 - Verify no keystore/private connection/build directory enters source archive or Git tree.
 
