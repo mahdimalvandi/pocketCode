@@ -4,7 +4,7 @@
 
 ## Automated/local baseline
 - `node --check app/src/main/assets/app.js`.
-- `gradle testDebugUnitTest` (wake-phrase normalization, PCM RMS threshold, WAV header/encoding).
+- `gradle testDebugUnitTest` (wake-phrase normalization, PCM RMS threshold, trailing-silence state transitions, WAV header/encoding).
 - `gradle lintDebug` and `gradle assembleDebug`.
 - Compile/sign via `build-apk.sh`; verify APK v2/v3 signatures and version metadata.
 - Scan staged text/binaries and decompressed APK entries for configured credential without printing it.
