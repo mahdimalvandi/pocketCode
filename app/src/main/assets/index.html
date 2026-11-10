@@ -43,7 +43,7 @@
         <div class="composer-end"><button class="icon-button mic" id="voice-button" aria-label="ورودی صوتی">♩</button><button class="send-button" id="send-button" aria-label="ارسال پیام">↑</button></div>
       </div>
     </div>
-    <div class="composer-caption"><span id="connection-label">فایل اتصال 9Router را وارد کن</span><span dir="ltr">BUILD · v0.5</span></div>
+    <div class="composer-caption"><span id="connection-label">فایل اتصال 9Router را وارد کن</span><span dir="ltr">BUILD · v0.6</span></div>
   </footer>
   <nav class="bottom-nav" aria-label="بخش‌های برنامه">
     <button class="active" id="chat-tab"><span>▤</span>گفتگو</button><button id="files-tab"><span>▱</span>فایل‌ها</button><button id="access-tab"><span>⌘</span>دسترسی‌ها</button><button id="settings-tab"><span>⚙</span>تنظیمات</button>
@@ -85,6 +85,10 @@
   <p class="muted">یک پوشه انتخاب کن؛ اپ فقط به همان محدوده دسترسی می‌گیرد. در حالت خودکار خواندن بدون پرسش است؛ تغییر فایل همیشه تأیید می‌خواهد. محتوای خوانده‌شده از طریق 9Router برای مدل ارسال می‌شود.</p>
   <p id="folder-status" class="muted">پوشه‌ای متصل نیست</p>
   <div class="file-actions"><button class="primary" id="connect-folder-button">انتخاب پوشه گوشی</button><button class="secondary" id="browse-shared-button">دیدن پوشه</button><button class="secondary" id="disconnect-folder-button">قطع دسترسی پوشه</button></div>
+  <h2>بیدارباش صوتی Pocket Code</h2>
+  <p class="muted">با فعال‌کردن این گزینه، وقتی اپ باز و روی صفحه است، عبارت «Pocket Code» یا «پاکت کد» با مدل گفتار آفلاین اندروید شناسایی می‌شود. بعد از بوق، فرمانت را بگو؛ ضبط با مکث کوتاه تمام می‌شود، صدا برای تبدیل به متن به Gemini از مسیر 9Router می‌رود و متن به‌طور خودکار به Agent ارسال می‌شود. صدای بیدارباش روی دستگاه پردازش می‌شود؛ صدای فرمان به سرویس مدل ارسال می‌شود. اندروید ۱۲+ و مدل آفلاین فارسی لازم است. این قابلیت با رفتن به پس‌زمینه یا بستن اپ متوقف می‌شود.</p>
+  <p class="muted" id="wake-status">بیدارباش صوتی خاموش است</p>
+  <div class="file-actions"><button class="primary" id="wake-enable">فعال‌کردن بیدارباش صوتی</button><button class="secondary" id="wake-disable">خاموش‌کردن بیدارباش</button></div>
   <h2>کنترل اپ‌ها</h2>
   <p class="muted">برای خواندن متن صفحه، کلیک، تایپ و اسکرول باید سرویس Accessibility را خودت روشن کنی. در حالت خودکار فقط کارهای حساس یا دکمه‌های نامشخص تأیید می‌خواهند. رمزها حذف می‌شوند و اپ‌های شناخته‌شدهٔ سیستمی و حساس مسدودند؛ تشخیص همهٔ اطلاعات حساس تضمین نمی‌شود. روی حساب بانکی، رمز، پرداخت و صفحهٔ خصوصی استفاده نکن.</p>
   <p id="accessibility-status" class="muted">کنترل اپ‌ها خاموش است</p>

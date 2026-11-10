@@ -1,6 +1,12 @@
 name: Build Android APK
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - 'app/**'
+      - '*.gradle'
+      - 'gradle.properties'
+      - '.github/workflows/android.yml'
   push:
     paths:
       - 'app/**'
@@ -23,6 +29,10 @@ jobs:
         with:
           gradle-version: '8.9'
       - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check app/src/main/assets/app.js
       - run: gradle assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:

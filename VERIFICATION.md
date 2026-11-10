@@ -1,5 +1,16 @@
 # Verification log
 
+## v0.6 candidate / foreground wake phrase
+
+- Added an opt-in, foreground-only wake phrase using Android 12+ `SpeechRecognizer.createOnDeviceSpeechRecognizer`; no cloud speech-recognition fallback is used for the wake phrase.
+- Wake aliases: “Pocket Code”, “پاکت کد” and common Persian spacing/orthographic variants. After a beep, command capture ends after approximately 1.6 seconds of trailing silence or at 30 seconds.
+- Post-wake WAV is transcribed through the already-configured Gemini model / 9Router endpoint and its transcript is submitted through the existing agent loop. Existing native file-mutation and sensitive-action approvals are unchanged.
+- Manual microphone dictation remains review-before-send.
+- **Not yet verified:** Android Java compilation, install/launch, recognizer language availability, real Persian wake phrase precision, mic handoff, VAD behavior, network transcription and automatic agent submission on a physical device. This environment did not provide Android SDK/device execution. The PR CI workflow is configured to compile and run the JavaScript syntax check.
+- The checked-in APK remains v0.5.0; do not install it expecting the new wake-word feature until a candidate APK is built and validated.
+
+# Verification log
+
 ## v0.5 / navigation and audio
 
 - Added opt-in automatic navigation with stop control; mutation confirmations retained. Native sensitive-click detection is heuristic, supplemented by tool sensitivity metadata, not a guarantee.

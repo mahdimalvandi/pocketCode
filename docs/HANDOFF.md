@@ -1,7 +1,7 @@
 # Agent handoff / next work
 
 ## Start here
-Current branch snapshot is v0.5.0. Read root `AGENTS.md` and the other docs before implementing. The owner prefers Persian conversation, an actual standalone Android app, existing 9Router credentials and low-friction ordinary navigation. They explicitly retained approval for sensitive operations, including sending messages and changing files.
+Current branch snapshot is v0.5.0; the voice wake-word implementation is proposed as a 0.6.0 candidate. Read root `AGENTS.md` and the other docs before implementing. The owner prefers Persian conversation, an actual standalone Android app, existing 9Router credentials and low-friction ordinary navigation. They explicitly retained approval for sensitive operations, including sending messages and changing files.
 
 ## Delivered and verified
 - APK compiled/signed with the original local personal debug key.
@@ -12,7 +12,7 @@ Current branch snapshot is v0.5.0. Read root `AGENTS.md` and the other docs befo
 ## Highest-priority follow-up
 1. **Actual Telegram reproduction:** capture redacted Accessibility tree and error; confirm clickable-ancestor fix. A plausible code defect was fixed, but it is not a confirmed diagnosis. Do not add blind coordinate taps as an easy workaround.
 2. **Sensitive-action safety:** test send/delete controls in Telegram and other apps. Native classification currently uses substring heuristics and model flags; ambiguous custom controls can evade them. Stronger app-specific semantics and clearer exact-target/draft previews are desirable.
-3. **Recorder lifecycle:** physical microphone tests, start/stop/pause race tests, permission callback UX and recording interruption feedback. Current first permission grant requires tapping start again.
+3. **Voice wake mode:** validate physical Android 12+ devices with offline Persian speech installed; test wake phrase false positives, mic handoff, silence detection, background pause/resume, manual-dictation coexistence and Gemini audio transcription. The wake mode is intentionally foreground-only; do not describe it as an always-on background assistant.
 4. **Real Persian speech:** verify router/model audio support and accurate transcription; handle empty/noisy recordings. No generic ASR fallback should silently replace Gemini.
 5. **Prompt/disclosure consistency:** older system prompt/tool descriptions and Android Accessibility description retain per-step approval wording; appended navigation policy overrides it. Consolidate into one authoritative policy and update strings, without weakening native enforcement.
 6. **Stop UX:** stop lives in Access dialog; a persistent, easy-to-reach stop affordance could improve safety. Do not promise cancellation reverses already dispatched effects.

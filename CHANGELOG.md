@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.0 (candidate)
+- Added opt-in “Pocket Code” / “پاکت کد” wake phrase using Android 12+ on-device speech recognition while the app is foreground.
+- Added silence-ended command capture, Gemini transcription through the existing 9Router connection, and automatic submission to the current agent loop.
+- Preserved manual review-before-send dictation and native approvals for sensitive actions; wake listening stops on Activity pause/background.
+
 ## 0.5.0
 - Opt-in automatic ordinary navigation and stop control; retained native mutation/sensitive-action approvals.
 - Clickable-ancestor resolution and effective clickability metadata for text-inside-row patterns.

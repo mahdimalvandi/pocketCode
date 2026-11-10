@@ -17,6 +17,17 @@ window.onNativeResponse = response => {
   clearTimeout(p.timer); pending.delete(String(response.id));
   if(response.error) p.reject(new Error(typeof response.error==='string'?response.error:JSON.stringify(response.error))); else p.resolve(response.result);
 };
+window.onNativeEvent = event => {
+  const value=String(event?.value||'');
+  if(event?.type==='wakeStatus'){notice(value);return;}
+  if(event?.type==='wakeError'){notice(value);bridge('wakeResume').catch(()=>{});return;}
+  if(event?.type==='wakeCommand'){
+    if(!value.trim()){notice('گفتاری تشخیص داده نشد.');bridge('wakeResume').catch(()=>{});return;}
+    $('prompt').value=value.trim();
+    notice('فرمان تشخیص داده شد؛ در حال ارسال به Agent…');
+    send();
+  }
+};
 function bridge(action,payload={}) {
   if (!native) return previewBridge(action,payload);
   return new Promise((resolve,reject)=>{
@@ -109,11 +120,12 @@ async function runTool(call){
 }
 async function send(){
   const text=$('prompt').value.trim();if(!text||busy)return;
-  if(!settings.apiKey){notice('اول کلید API را در تنظیمات وارد کن.');openSettings();return;}
+  if(!settings.apiKey){notice('اول کلید API را در تنظیمات وارد کن.');openSettings();if(native)bridge('wakeResume').catch(()=>{});return;}
   if(!native){notice('چت واقعی فقط در اپ اندروید اجرا می‌شود؛ پیش‌نمایش به Gemini وصل نیست.');return;}
   if(!session.messages.length)session.title=text.slice(0,45);
   if(session.protocol!=='openai'){session=newSession();session.title=text.slice(0,45);}
   const requestSettings={...settings};
+  await bridge('wakePause').catch(()=>{});
   $('prompt').value='';addMessage('user',text);session.contents.push({role:'user',content:text});persist();setBusy(true);
   let finalReceived=false;automationStopped=false;
   try{
@@ -145,7 +157,10 @@ async function send(){
     }
     if(!finalReceived)notice('حداکثر ۲۴ مرحلهٔ ابزار انجام شد. برای ادامه پیام بده.');
   }catch(e){addMessage('error',e.message);}
-  finally{setBusy(false);$('prompt').focus();}
+  finally{
+    setBusy(false);$('prompt').focus();
+    if(native)bridge('wakeResume').catch(()=>{});
+  }
 }
 function openSettings(){if(busy){notice('تا پایان پاسخ، اتصال را تغییر نده.');return;}$('api-key').value=settings.apiKey||'';$('base-url').value=settings.baseURL;$('model-id').value=settings.model;show('settings-dialog');}
 function updateSettingsUI(){$('model-label').textContent=settings.model.replace(/^gemini-/,'Gemini ');$('connection-label').textContent=native?(settings.apiKey?'9Router · اتصال تنظیم شده':'فایل اتصال 9Router را وارد کن'):'پیش‌نمایش مرورگر · اجرای واقعی در اپ اندروید';}
@@ -163,10 +178,35 @@ $('export-file-button').onclick=async()=>{try{await bridge('exportFile',{path:$(
 async function importFile(){try{await bridge('importFile');notice('فایل به فضای کاری وارد شد.');if($('files-dialog').open)await openFiles();}catch(e){notice(e.message);}}
 let recording=false,voiceWorking=false,voiceTimer;
 function voiceUI(){ $('voice-start').disabled=recording||voiceWorking;$('voice-transcribe').disabled=!recording||voiceWorking;$('voice-cancel').disabled=voiceWorking;$('voice-close').disabled=voiceWorking; }
-async function cancelVoice(){if(voiceWorking)return;clearTimeout(voiceTimer);if(recording){try{await bridge('voiceCancel');}catch(e){notice(e.message);}}recording=false;voiceUI();$('voice-dialog').close();}
+async function cancelVoice(){
+  if(voiceWorking)return;
+  clearTimeout(voiceTimer);
+  if(recording){try{await bridge('voiceCancel');}catch(e){notice(e.message);}}
+  recording=false;voiceUI();$('voice-dialog').close();
+  if(native)bridge('wakeResume').catch(()=>{});
+}
 $('voice-button').onclick=()=>{if(!native){notice('ضبط Gemini فقط در اپ اندروید اجرا می‌شود.');return;}if(!recording&&!voiceWorking)$('voice-status').textContent='آمادهٔ ضبط';show('voice-dialog');};
-$('voice-start').onclick=async()=>{voiceWorking=true;voiceUI();try{await bridge('voiceStart');recording=true;$('voice-status').textContent='در حال ضبط… حداکثر ۶۰ ثانیه';voiceTimer=setTimeout(()=>{$('voice-status').textContent='۶۰ ثانیه ضبط شد؛ تبدیل به متن را بزن.';},60000);}catch(e){$('voice-status').textContent=e.message;}finally{voiceWorking=false;voiceUI();}};
-$('voice-transcribe').onclick=async()=>{voiceWorking=true;clearTimeout(voiceTimer);voiceUI();$('voice-status').textContent='Gemini در حال تبدیل صدا به متن…';try{const result=await bridge('voiceTranscribe');recording=false;if(result.text?.trim()){$('prompt').value+=($('prompt').value?'\n':'')+result.text.trim();$('voice-dialog').close();$('prompt').focus();notice('متن آماده است؛ بررسی کن و خودت ارسالش کن.');}else $('voice-status').textContent='گفتاری تشخیص داده نشد.';}catch(e){recording=false;$('voice-status').textContent=e.message;}finally{voiceWorking=false;voiceUI();}};
+$('voice-start').onclick=async()=>{
+  voiceWorking=true;voiceUI();
+  try{
+    await bridge('wakePause');
+    await bridge('voiceStart');
+    recording=true;$('voice-status').textContent='در حال ضبط… حداکثر ۶۰ ثانیه';
+    voiceTimer=setTimeout(()=>{$('voice-status').textContent='۶۰ ثانیه ضبط شد؛ تبدیل به متن را بزن.';},60000);
+  }catch(e){
+    $('voice-status').textContent=e.message;
+    if(native)bridge('wakeResume').catch(()=>{});
+  }finally{voiceWorking=false;voiceUI();}
+};
+$('voice-transcribe').onclick=async()=>{
+  voiceWorking=true;clearTimeout(voiceTimer);voiceUI();$('voice-status').textContent='Gemini در حال تبدیل صدا به متن…';
+  try{
+    const result=await bridge('voiceTranscribe');recording=false;
+    if(result.text?.trim()){$('prompt').value+=($('prompt').value?'\n':'')+result.text.trim();$('voice-dialog').close();$('prompt').focus();notice('متن آماده است؛ بررسی کن و خودت ارسالش کن.');}
+    else $('voice-status').textContent='گفتاری تشخیص داده نشد.';
+  }catch(e){recording=false;$('voice-status').textContent=e.message;}
+  finally{voiceWorking=false;voiceUI();if(native)bridge('wakeResume').catch(()=>{});}
+};
 $('voice-cancel').onclick=cancelVoice;$('voice-close').onclick=cancelVoice;
 $('voice-dialog').addEventListener('cancel',e=>{e.preventDefault();cancelVoice();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&recording&&!voiceWorking)cancelVoice();});
@@ -182,10 +222,19 @@ document.querySelectorAll('[data-close]').forEach(button=>button.onclick=()=>but
 $('settings-tab').onclick=openSettings;$('model-button').onclick=openSettings;$('files-tab').onclick=openFiles;
 $('chat-tab').onclick=()=>{document.querySelectorAll('dialog[open]').forEach(d=>{if(d.id!=='approval-dialog')d.close();});$('prompt').focus();};
 $('create-file-button').onclick=()=>openEditor();$('import-button').onclick=importFile;$('import-file-button').onclick=importFile;
-async function refreshAccess(){try{const status=await bridge('accessStatus');$('phone-read-status').textContent=status.allFiles&&status.readConsent?'خواندن گسترده فعال است؛ بدون سؤال برای هر فایل':status.readConsent?'رضایت ثبت شد؛ مجوز اندروید هنوز فعال نیست':'خواندن گسترده خاموش است';$('automatic-status').textContent=status.automaticNavigation?'کنترل خودکار روشن است؛ کار حساس تأیید می‌خواهد':'کنترل خودکار خاموش است';$('folder-status').textContent=status.folder?'یک پوشهٔ انتخاب‌شده متصل است':'پوشه‌ای متصل نیست';$('accessibility-status').textContent=status.accessibility?'کنترل اپ‌ها فعال است؛ رفتار تابع حالت خودکار است':'کنترل اپ‌ها خاموش است';}catch(e){notice(e.message);}}
+async function refreshAccess(){try{
+  const status=await bridge('accessStatus');
+  $('phone-read-status').textContent=status.allFiles&&status.readConsent?'خواندن گسترده فعال است؛ بدون سؤال برای هر فایل':status.readConsent?'رضایت ثبت شد؛ مجوز اندروید هنوز فعال نیست':'خواندن گسترده خاموش است';
+  $('automatic-status').textContent=status.automaticNavigation?'کنترل خودکار روشن است؛ کار حساس تأیید می‌خواهد':'کنترل خودکار خاموش است';
+  $('folder-status').textContent=status.folder?'یک پوشهٔ انتخاب‌شده متصل است':'پوشه‌ای متصل نیست';
+  $('accessibility-status').textContent=status.accessibility?'کنترل اپ‌ها فعال است؛ رفتار تابع حالت خودکار است':'کنترل اپ‌ها خاموش است';
+  $('wake-status').textContent=status.wakeWordEnabled?(status.wakeWordActive?'بیدارباش صوتی فعال است.':'بیدارباش انتخاب شده؛ برای فعال‌شدن، اپ را در پیش‌زمینه نگه دار.'):'بیدارباش صوتی خاموش است';
+}catch(e){notice(e.message);}}
 let automationStopped=false;
 $('automatic-enable').onclick=async()=>{try{await bridge('setAutomaticNavigation',{enabled:true});await refreshAccess();}catch(e){notice(e.message);}};
 $('automatic-stop').onclick=async()=>{automationStopped=true;try{await bridge('setAutomaticNavigation',{enabled:false});await refreshAccess();notice('کنترل خودکار متوقف شد.');}catch(e){notice(e.message);}};
+$('wake-enable').onclick=async()=>{try{await bridge('wakeStart');await refreshAccess();}catch(e){notice(e.message);}};
+$('wake-disable').onclick=async()=>{try{await bridge('wakeStop');await refreshAccess();}catch(e){notice(e.message);}};
 $('enable-phone-read-button').onclick=async()=>{try{await bridge('enablePhoneRead');await refreshAccess();}catch(e){notice(e.message);}};
 $('disable-phone-read-button').onclick=async()=>{try{await bridge('disablePhoneRead');await refreshAccess();notice('خواندن گسترده در اپ متوقف شد؛ برای لغو مجوز سیستم، مدیریت مجوز را بزن.');}catch(e){notice(e.message);}};
 $('phone-read-settings-button').onclick=async()=>{try{await bridge('phoneReadSettings');}catch(e){notice(e.message);}};

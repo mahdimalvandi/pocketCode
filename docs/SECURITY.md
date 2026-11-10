@@ -4,7 +4,7 @@
 The model and content from screens/files/audio are untrusted. Native Java is the authorization boundary; a prompt saying “ask permission” is not enforcement. The WebView only renders bundled UI, not imported/generated HTML as executable content; networking is handled natively. Never add arbitrary navigation or expose the bridge to remote documents without a new threat review.
 
 ## Data leaving the device
-Chat text, tool-returned filenames/content, approved or automatically read screen text and user-submitted recorded audio go to the configured 9Router and its upstream provider. No claim is made about upstream retention. Chat history is local but unencrypted within the app sandbox. Android speech recognition code exists historically, but the current mic UI uses Gemini audio and has no silent recognizer fallback.
+Chat text, tool-returned filenames/content, approved or automatically read screen text and submitted command audio go to the configured 9Router and its upstream provider. Wake-phrase detection uses Android's on-device SpeechRecognizer (Android 12+); it does not send wake-listening audio to 9Router. Audio recorded after the wake phrase is sent to Gemini for transcription, then its transcript is submitted to the agent loop. No claim is made about upstream retention. Chat history is local but unencrypted within the app sandbox.
 
 ## Authorization matrix
 | Operation | Enforcement |
@@ -15,7 +15,7 @@ Chat text, tool-returned filenames/content, approved or automatically read scree
 | Sensitive click | Model `sensitive` metadata plus native label/view-ID checks; unknown targets prompt |
 | File write/delete | Native per-operation confirmation |
 | Enable permissions | User manually operates Android settings; app cannot self-grant |
-| Audio | OS microphone permission + user starts recording and submits transcription |
+| Audio | OS microphone permission; user starts dictation or explicitly enables foreground wake mode. Wake phrase is on-device; post-wake command audio is sent to 9Router and auto-submitted to the agent. |
 
 All-files permission itself grants writing; application read-only behavior is not OS-enforced. SAF grants can include write permission but handlers still ask. Automatic classification cannot guarantee prevention of all unintended sends/deletions. Use only harmless test apps/data until physical-device review is complete.
 

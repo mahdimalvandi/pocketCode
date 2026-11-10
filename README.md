@@ -1,6 +1,6 @@
 # Pocket Code · Android alpha
 
-**Current release: 0.5.0 (personal-testing alpha).** Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
+**Current source candidate: 0.6.0 (personal-testing alpha).** The checked-in APK remains the previous 0.5.0 build until this candidate passes CI and device validation. Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
 
 ## Documentation / agent onboarding
 
@@ -16,6 +16,14 @@ Start with [`AGENTS.md`](AGENTS.md), then:
 Latest personal-testing APK: [`dist/pocket-code-debug.apk`](dist/pocket-code-debug.apk). Install over the previous version without uninstalling to retain data. Source does not include credentials or the original private signing key. A fresh clone/CI debug build may not upgrade the installed APK because its signer differs.
 
 The sections below are chronological release notes. **Newer sections supersede older feature/permission descriptions.** Native microphone, Telegram and other cross-app behavior still need physical-device testing. No license has been selected by the owner yet.
+
+## v0.6 candidate: Pocket Code wake phrase → Gemini → Agent
+
+Enable **بیدارباش صوتی Pocket Code** in **دسترسی‌ها** and approve the native disclosure. Grant microphone permission if Android asks. On Android 12+ with an installed offline Persian speech model, the app listens for **“Pocket Code”** or **“پاکت کد”** using Android's on-device speech recognizer. A beep means it heard the phrase; speak the command after the beep. The recorder ends after about 1.6 seconds of silence (maximum 30 seconds), sends the WAV to the configured Gemini model through 9Router, and automatically submits the resulting transcript to the existing agent loop. Native confirmations for file changes and sensitive phone actions remain in force.
+
+This is deliberately **foreground-only**: listening stops when Pocket Code is paused, sent to the background or closed, and resumes when the app returns. It is not an always-on hotword service. Wake detection stays on-device; only the command recorded after the beep goes to 9Router/upstream provider. The device must support Android's on-device recognizer and have an offline Persian model installed; there is no online wake-word fallback. The old manual microphone flow remains available and still requires the user to review and send its transcript.
+
+This is a source candidate, not a verified installation build. Android compilation and on-device microphone/Persian recognition need CI and physical-device validation before replacing the checked-in APK.
 
 ## v0.5: automatic navigation, ancestor clicks and Gemini dictation
 

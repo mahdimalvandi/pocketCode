@@ -8,7 +8,8 @@ Bundled WebView UI (assets/index.html, styles.css, app.js)
 MainActivity Java dispatcher / native authorization
     |-- private workspace / SharedFolder SAF / PhoneFiles broad reads
     |-- PhoneAccessService Accessibility
-    |-- VoiceRecorder AudioRecord → WAV in memory
+    |-- WakeWordListener on-device SpeechRecognizer → wake phrase only while Activity is foreground
+    |-- VoiceRecorder AudioRecord → VAD-bounded WAV in memory
     |-- Android pickers and settings
     `-- HTTPS 9Router /chat/completions → upstream model
     |
@@ -20,7 +21,8 @@ MainActivity Java dispatcher / native authorization
 - `SharedFolder.java`: resolve relative paths under a persisted document tree; list/read/write via document provider. Provider writes may truncate/partially fail.
 - `PhoneFiles.java`: discovers shared-volume roots, canonical-path containment, paginated listings and strict UTF-8 file reads. No mutation API.
 - `PhoneAccessService.java`: active-window snapshots, node cache, epoch IDs, fingerprints, ancestor clicks, action execution, package/password filtering and accessibility-overlay approval.
-- `VoiceRecorder.java`: 16 kHz mono PCM AudioRecord, bounded 60-second memory buffer, WAV serialization, cancellation.
+- `WakeWordListener.java`: Android 12+ on-device Persian speech recognition for “Pocket Code” / “پاکت کد”; no cloud wake-word fallback; Activity owns its foreground lifecycle.
+- `VoiceRecorder.java`: 16 kHz mono PCM AudioRecord, bounded manual recording and silence-ended wake-command recording, WAV serialization, cancellation.
 - `AndroidManifest.xml`, `res/xml/phone_access.xml`: permissions, service declaration and capabilities.
 - `assets/app.js`: session persistence, rendering, async bridge promises, model tool loop, file browsers and voice/Access controls.
 - `assets/index.html`, `styles.css`: dark Persian-first UI and dialogs.
@@ -38,7 +40,7 @@ Snapshots collect bounded visible, non-password node text and return IDs scoped 
 - Preferences: `secure_settings`; encrypted API key plus model/base URL, SAF tree, broad-read consent and automatic-navigation flag.
 - Credential encryption: Android Keystore AES/GCM; imported plaintext JSON is not automatically removed from Downloads.
 - Conversations: WebView localStorage, app sandbox, not separately encrypted.
-- Voice: memory only; lifecycle pause discards active capture; no audio history.
+- Voice: memory only; lifecycle pause discards active capture; no audio history. Wake phrase recognition is on-device and only active while the Activity is foreground. Post-wake audio is sent to the configured Gemini model through 9Router; its transcript enters the same agent send/tool loop.
 
 ## Limits and lifecycle
-One worker executor handles bridge work. HTTP timeouts are 60 seconds. Request limit is 4 MB; response limit 4 MB; file text limit 512 KB. No foreground service guarantees task survival after Android kills the activity/process. Accessibility uses a main-thread handler and native overlay prompts. Stop clears cached nodes and ends the current JS loop but cannot reverse completed actions.
+One worker executor handles bridge work. HTTP timeouts are 60 seconds. Request limit is 4 MB; response limit 4 MB; file text limit 512 KB. Wake listening and capture stop when the Activity is paused; no foreground service or background wake guarantee is provided. Accessibility uses a main-thread handler and native overlay prompts. Stop clears cached nodes and ends the current JS loop but cannot reverse completed actions.
