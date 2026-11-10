@@ -50,9 +50,8 @@ final class VoiceRecorder {
                 if(n<0){failure="Microphone read failed.";break;}
                 if(n>0){
                     if(trailingSilenceMillis>0){
-                        int rms=calculateRms(data,n);
                         long now=System.nanoTime();
-                        if(rms>=380){speechDetected=true;lastSpeechNanos=now;}
+                        if(hasSpeech(data,n)){speechDetected=true;lastSpeechNanos=now;}
                         else if(speechDetected && now-lastSpeechNanos>=trailingSilenceMillis*1_000_000L){
                             pcm.write(data,0,n);
                             break;
