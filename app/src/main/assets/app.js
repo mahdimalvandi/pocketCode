@@ -20,7 +20,7 @@ window.onNativeResponse = response => {
 window.onNativeEvent = event => {
   const value=String(event?.value||'');
   if(event?.type==='wakeStatus'){notice(value);return;}
-  if(event?.type==='wakeError'){notice(value);bridge('wakeResume').catch(()=>{});return;}
+  if(event?.type==='wakeError'){notice(value);return;}
   if(event?.type==='wakeCommand'){
     if(!value.trim()){notice('گفتاری تشخیص داده نشد.');bridge('wakeResume').catch(()=>{});return;}
     $('prompt').value=value.trim();
