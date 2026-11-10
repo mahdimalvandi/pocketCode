@@ -8,7 +8,7 @@ Read these files before changing behavior:
 5. `docs/TESTING.md` and `VERIFICATION.md` — what was actually tested.
 6. `docs/HANDOFF.md` — priorities and unresolved issues.
 
-Current source candidate: **0.6.0 / versionCode 6**; the checked-in APK is still v0.5.0 until candidate CI/device validation and packaging. Android Java + bundled HTML/CSS/JS, not React, not a remote desktop client. Avoid adding a backend or changing the router/provider unless requested.
+Current source candidate: **0.7.0 / versionCode 7**; the checked-in APK is still v0.5.0 until candidate CI/device validation and packaging. Android Java + bundled HTML/CSS/JS, not React, not a remote desktop client. Avoid adding a backend or changing the router/provider unless requested.
 
 ## Non-negotiable maintenance rules
 - Never commit credentials, imported connection JSON, signing keystores, real chats or private phone files. The local `dist/private-9router-connection.json` is sensitive even if ignored. Never include it in archives.

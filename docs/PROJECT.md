@@ -14,8 +14,8 @@ Pocket Code is a personal Android coding/phone assistant inspired by OpenCode's 
 | Workspace | App-private UTF-8 text files; list/read/create/overwrite/delete; mutations require native approval |
 | Selected phone folder | Android SAF tree chosen by user; read/list/write; overwrite confirmation; no guaranteed atomic writes |
 | Broad phone reading | One-time app consent plus OS all-files/legacy permission; read-only adapter; discover roots, list 200 entries/page, read UTF-8 up to 512 KB |
-| App control | Accessibility screen text, fresh element IDs, click, text entry, scroll, back; launcher discovery/open |
-| Automatic navigation | Opt-in; ordinary operations skip repeated confirmation; sensitive/unknown clicks still prompt |
+| App control | Accessibility screen text, fresh element IDs, click, text entry, scroll, back; launcher discovery/open. On-demand screenshot fallback (API 30+) for visual understanding, with native per-image approval and no coordinate clicks |
+| Automatic navigation | Opt-in; ordinary operations skip repeated confirmation; sensitive/unknown clicks still prompt. Screenshot capture always prompts separately |
 | Voice | Manual Gemini dictation remains review-before-send. Optional Pocket Code wake phrase uses Android on-device Persian recognition while the app is foreground; after a beep, VAD-bounded audio is sent to Gemini and the transcript is auto-submitted to the existing agent loop. |
 | Persistence | Chat sessions in WebView localStorage; credentials encrypted via Android Keystore |
 

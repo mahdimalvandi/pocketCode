@@ -9,6 +9,10 @@ Current feature branch snapshot is v0.6.0 candidate; its CI build and host-side 
 - Real 9Router chat/tool calls previously returned 200. A synthetic WAV audio request returned 200 with browser-compatible User-Agent; silence hallucinated text.
 - No phone/emulator was available during implementation. User has installed earlier builds and enabled Accessibility, but the v0.5 behavior is not fully device-verified.
 
+## Latest candidate: 0.7.0 visual screen understanding
+- Added an explicitly approved `capture_screen` fallback when the Accessibility tree cannot represent the UI. It sends a bounded JPEG as multimodal image input to the configured 9Router model, only for the current Agent run and without local persistence. No coordinate gestures were added.
+- Still requires batch build/lint and physical-device tests. Android 14+ active-window capture and Android 11–13 display capture need separate verification; blocked-package heuristics are not exhaustive and FLAG_SECURE behavior is not guaranteed. Confirm that the selected 9Router model supports `image_url` content.
+
 ## Highest-priority follow-up
 1. **Actual Telegram reproduction:** capture redacted Accessibility tree and error; confirm clickable-ancestor fix. A plausible code defect was fixed, but it is not a confirmed diagnosis. Do not add blind coordinate taps as an easy workaround.
 2. **Sensitive-action safety:** test send/delete controls in Telegram and other apps. Native classification currently uses substring heuristics and model flags; ambiguous custom controls can evade them. Stronger app-specific semantics and clearer exact-target/draft previews are desirable.

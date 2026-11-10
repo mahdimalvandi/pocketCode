@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.0 (candidate)
+- Added `capture_screen` as an on-demand visual fallback when Accessibility text is insufficient. Native approval is required for every capture, even in automatic-navigation mode.
+- Captures the active app window on Android 14+ and the display on Android 11–13; known blocked packages are rejected before and after approval.
+- Sends a bounded JPEG as OpenAI-compatible `image_url` content through 9Router. Image bytes stay in memory for the current Agent run and are excluded from persisted chat history and disk.
+- Does not add coordinate clicking. Requires a vision-capable selected model and Android 11+ Accessibility screenshot support. Physical-device and live-router vision testing remain outstanding.
+
 ## 0.6.0 (candidate)
 - Added opt-in “Pocket Code” / “پاکت کد” wake phrase using Android 12+ on-device speech recognition while the app is foreground.
 - Added silence-ended command capture, Gemini transcription through the existing 9Router connection, and automatic submission to the current agent loop.

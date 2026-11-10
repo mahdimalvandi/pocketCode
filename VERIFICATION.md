@@ -1,5 +1,13 @@
 # Verification log
 
+## v0.7.0 candidate / visual screen understanding
+
+- Implemented `capture_screen` through Android AccessibilityService screenshot APIs (Android 11+); Android 14+ uses active-window capture, Android 11–13 use display capture.
+- The tool is always protected by a fresh native approval, even when automatic navigation is enabled. It checks the active package before approval and again before capture, rejects known blocked packages, limits image dimensions and JPEG size, and returns Base64 only in memory.
+- JavaScript attaches the image as OpenAI-compatible `image_url` content during the current Agent run. Base64 is stripped from the tool result and never added to persisted `session.contents` or localStorage. No coordinate actions were added.
+- **Not built or tested in this task, by request.** GitHub Actions remains manual-only; no workflow was dispatched.
+- **Requires later batch verification:** JS syntax, Android compile/lint/package, screenshot API capability on Android 11–15, capture denial and app-switch race, FLAG_SECURE/blocked-package handling, no local persistence, 9Router model image compatibility and actual visual reasoning on a physical device.
+
 ## v0.6 candidate / foreground wake phrase
 
 - Added an opt-in, foreground-only wake phrase using Android 12+ `SpeechRecognizer.createOnDeviceSpeechRecognizer`; no cloud speech-recognition fallback is used for the wake phrase.
