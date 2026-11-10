@@ -1,5 +1,9 @@
 package dev.pocketcode.app;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
@@ -10,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 
 /** In-memory mono PCM recorder. The automatic mode ends after trailing silence. */
 final class VoiceRecorder {
+    private final Context context;
     private AudioRecord recorder;
     private Thread thread;
     private volatile boolean running;
@@ -18,6 +23,11 @@ final class VoiceRecorder {
     private int maximumSeconds=60;
     private int trailingSilenceMillis;
     private Runnable autoStopCallback;
+
+    VoiceRecorder(Context context) {
+        if(context==null)throw new IllegalArgumentException("Context is required.");
+        this.context=context.getApplicationContext();
+    }
 
     synchronized void start() throws Exception {
         startInternal(60,0,null);
@@ -29,7 +39,10 @@ final class VoiceRecorder {
         startInternal(maxSeconds,silenceMillis,callback);
     }
 
+    @SuppressLint("MissingPermission")
     private void startInternal(int maxSeconds,int silenceMillis,Runnable callback) throws Exception {
+        if(context.checkSelfPermission(Manifest.permission.RECORD_AUDIO)!=PackageManager.PERMISSION_GRANTED)
+            throw new SecurityException("Microphone permission is not granted.");
         if(recorder!=null)throw new Exception("Recording already started.");
         pcm.reset();failure=null;
         maximumSeconds=maxSeconds;
