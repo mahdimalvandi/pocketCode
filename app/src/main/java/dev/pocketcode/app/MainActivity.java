@@ -1,6 +1,7 @@
 package dev.pocketcode.app;
 
 import android.app.Activity;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
@@ -635,6 +636,9 @@ public final class MainActivity extends Activity {
         else if (kind == VOICE) pendingVoice = null;
     }
 
+    // The explicit READ/WRITE mask is required by takePersistableUriPermission;
+    // lint cannot narrow the getFlags() result through the bitwise mask.
+    @SuppressLint("WrongConstant")
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode==FOLDER){
