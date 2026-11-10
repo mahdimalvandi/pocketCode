@@ -1,7 +1,7 @@
 # Agent handoff / next work
 
 ## Start here
-Current branch snapshot is v0.5.0; the voice wake-word implementation is proposed as a 0.6.0 candidate. Read root `AGENTS.md` and the other docs before implementing. The owner prefers Persian conversation, an actual standalone Android app, existing 9Router credentials and low-friction ordinary navigation. They explicitly retained approval for sensitive operations, including sending messages and changing files.
+Current feature branch snapshot is v0.6.0 candidate; its CI build and host-side tests pass, but the foreground wake flow still needs physical-device verification. Read root `AGENTS.md` and the other docs before implementing. The owner prefers Persian conversation, an actual standalone Android app, existing 9Router credentials and low-friction ordinary navigation. They explicitly retained approval for sensitive operations, including sending messages and changing files.
 
 ## Delivered and verified
 - APK compiled/signed with the original local personal debug key.
