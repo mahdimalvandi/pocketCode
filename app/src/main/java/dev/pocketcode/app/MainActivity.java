@@ -230,17 +230,17 @@ public final class MainActivity extends Activity {
                         voiceRecorder=null;wakeCommandRecording=false;
                     }
                     notifyWeb("wakeStatus","بیدارباش صوتی خاموش شد.");
-                    respond(message,new JSONObject().put("ok",true),null);
+                    respondOk(message);
                 });return;
             case "wakePause":
                 runOnUiThread(()->{
                     stopWakeWordListener();
-                    respond(message,new JSONObject().put("ok",true),null);
+                    respondOk(message);
                 });return;
             case "wakeResume":
                 runOnUiThread(()->{
                     startWakeWordListener();
-                    respond(message,new JSONObject().put("ok",true),null);
+                    respondOk(message);
                 });return;
             case "voiceStart":
                 if(checkSelfPermission(android.Manifest.permission.RECORD_AUDIO)!=android.content.pm.PackageManager.PERMISSION_GRANTED){
@@ -838,6 +838,14 @@ public final class MainActivity extends Activity {
             wakeCommandProcessing=false;
             notifyWeb("wakeError","برنامه مشغول است؛ دوباره تلاش کن.");
             startWakeWordListener();
+        }
+    }
+
+    private void respondOk(JSONObject message) {
+        try {
+            respond(message,new JSONObject().put("ok",true),null);
+        } catch (org.json.JSONException e) {
+            respond(message,null,"Operation completed but response could not be encoded.");
         }
     }
 
