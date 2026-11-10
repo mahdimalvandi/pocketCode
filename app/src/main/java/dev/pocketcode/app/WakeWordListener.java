@@ -11,7 +11,6 @@ import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 
 import java.util.ArrayList;
-import java.util.Locale;
 
 /** On-device-only wake phrase detector. It is owned by MainActivity and runs only while visible. */
 final class WakeWordListener implements RecognitionListener {
@@ -78,23 +77,13 @@ final class WakeWordListener implements RecognitionListener {
 
     private final Runnable retry=this::listen;
 
-    private static boolean matchesWakePhrase(String phrase) {
-        if (phrase==null) return false;
-        String normalized=phrase.toLowerCase(Locale.ROOT)
-                .replace('ي','ی').replace('ك','ک')
-                .replaceAll("[^\\p{L}\\p{N}]","");
-        return normalized.contains("pocketcode")
-                || normalized.contains("پاکتکد")
-                || normalized.contains("پاکتکود");
-    }
-
     @Override public void onResults(Bundle results) {
         if (!running) return;
         ArrayList<String> matches=results==null?null:
                 results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
         if (matches!=null) {
             for (String match:matches) {
-                if (matchesWakePhrase(match)) {
+                if (WakePhraseMatcher.matches(match)) {
                     running=false;
                     stopRecognizer();
                     callback.onWakeWord();
