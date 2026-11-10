@@ -351,7 +351,7 @@ public final class MainActivity extends Activity {
                     respond(message,new JSONObject().put("ok",true),null);
                 });return;
             }
-            case "read_screen": case "click_element": case "type_text": case "scroll_element": case "phone_back": {
+            case "read_screen": case "capture_screen": case "click_element": case "type_text": case "scroll_element": case "phone_back": {
                 PhoneAccessService service=PhoneAccessService.current();
                 if(service==null)throw friendly("سرویس Accessibility فعال نیست. از بخش دسترسی‌ها خودت فعالش کن.");
                 service.request(action,payload,(value,error)->respond(message,value,error));return;
