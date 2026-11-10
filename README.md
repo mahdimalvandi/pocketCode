@@ -1,6 +1,6 @@
 # Pocket Code · Android alpha
 
-**Current source candidate: 0.6.0 (personal-testing alpha).** The checked-in APK remains the previous 0.5.0 build until this candidate passes CI and device validation. Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
+**Current source candidate: 0.6.0 (personal-testing alpha).** CI validation has passed, but the checked-in APK remains the previous 0.5.0 build until physical-device validation. Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
 
 ## Documentation / agent onboarding
 
@@ -13,7 +13,7 @@ Start with [`AGENTS.md`](AGENTS.md), then:
 - [Next-agent handoff and open issues](docs/HANDOFF.md)
 - [Changelog](CHANGELOG.md)
 
-Latest personal-testing APK: [`dist/pocket-code-debug.apk`](dist/pocket-code-debug.apk). Install over the previous version without uninstalling to retain data. Source does not include credentials or the original private signing key. A fresh clone/CI debug build may not upgrade the installed APK because its signer differs.
+Checked-in personal-testing APK: [`dist/pocket-code-debug.apk`](dist/pocket-code-debug.apk) (v0.5.0). The CI-built v0.6.0 candidate is available as the `pocket-code-debug-apk` artifact in [workflow run 42788994845](https://github.com/mahdimalvandi/pocketCode/actions/runs/42788994845). A CI debug build may not upgrade a locally signed APK because its signer differs; back up app data and credentials before uninstalling/reinstalling. Source does not include credentials or the original private signing key.
 
 The sections below are chronological release notes. **Newer sections supersede older feature/permission descriptions.** Native microphone, Telegram and other cross-app behavior still need physical-device testing. No license has been selected by the owner yet.
 
@@ -23,7 +23,7 @@ Enable **بیدارباش صوتی Pocket Code** in **دسترسی‌ها** and 
 
 This is deliberately **foreground-only**: listening stops when Pocket Code is paused, sent to the background or closed, and resumes when the app returns. It is not an always-on hotword service. Wake detection stays on-device; only the command recorded after the beep goes to 9Router/upstream provider. The device must support Android's on-device recognizer and have an offline Persian model installed; there is no online wake-word fallback. The old manual microphone flow remains available and still requires the user to review and send its transcript.
 
-This is a source candidate, not a verified installation build. Android compilation and on-device microphone/Persian recognition need CI and physical-device validation before replacing the checked-in APK.
+The v0.6.0 candidate has passed CI compilation, 17 JVM tests, Android Lint, APK signature/metadata checks and archive integrity validation. It is not yet verified on a physical Android device; microphone behavior, offline Persian recognition, Gemini transcription and end-to-end Agent submission remain untested.
 
 ## v0.5: automatic navigation, ancestor clicks and Gemini dictation
 
