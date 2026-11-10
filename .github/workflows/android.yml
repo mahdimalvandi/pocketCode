@@ -35,6 +35,8 @@ jobs:
         with:
           node-version: '22'
       - run: node --check app/src/main/assets/app.js
+      - run: gradle testDebugUnitTest --no-daemon
+      - run: gradle lintDebug --no-daemon
       - run: gradle assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
