@@ -642,8 +642,8 @@ public final class MainActivity extends Activity {
             if(resultCode!=RESULT_OK||data==null||data.getData()==null){respond(request,null,"Folder selection cancelled.");return;}
             try{
                 Uri uri=data.getData();
-                int flags=data.getFlags()&(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                getContentResolver().takePersistableUriPermission(uri,flags);
+                getContentResolver().takePersistableUriPermission(uri,
+                        data.getFlags()&(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION));
                 preferences.edit().putString("sharedTree",uri.toString()).commit();
                 respond(request,new JSONObject().put("ok",true),null);
             }catch(Exception e){respond(request,null,"Folder access could not be saved.");}return;
