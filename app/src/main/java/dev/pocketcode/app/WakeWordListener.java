@@ -38,7 +38,9 @@ final class WakeWordListener implements RecognitionListener {
     void start() {
         if (Looper.myLooper()!=Looper.getMainLooper())
             throw new IllegalStateException("SpeechRecognizer must be started on the main thread.");
-        if (!isAvailable(context))
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S)
+            throw new IllegalStateException("On-device speech recognition requires Android 12 or newer.");
+        if (!SpeechRecognizer.isOnDeviceRecognitionAvailable(context))
             throw new IllegalStateException("On-device speech recognition is unavailable.");
         stop();
         recognizer=SpeechRecognizer.createOnDeviceSpeechRecognizer(context);
