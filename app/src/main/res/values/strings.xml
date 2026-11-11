@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="accessibility_description">Pocket Code can read visible app text and click, type or scroll only after you approve each step. Approved screen content is sent through 9Router to the model. Password nodes and known system/security/financial apps are blocked, but sensitive text cannot always be detected. Never use on sensitive screens. Disable this service when finished.</string>
+    <string name="accessibility_description">Pocket Code can read visible app text and click, type or scroll. It can also take an approved screenshot and perform one approved tap at a time using that screenshot. Every screenshot and visual tap requires a separate confirmation, even when automatic navigation is enabled. Approved screen content and images are sent through 9Router to the model. Password nodes and known system/security/financial apps are blocked heuristically, but sensitive content cannot always be detected. Never use on sensitive screens. Disable this service when finished.</string>
 </resources>
