@@ -386,8 +386,11 @@ async function send(){
           &&runtime.taskMemory.steps.some(step=>step.status!=='completed')){
         runtime.unansweredTaskTurns++;
         if(runtime.unansweredTaskTurns<=1){notice('برنامه هنوز مرحلهٔ ناتمام دارد؛ در حال درخواست تعیین تکلیف…');continue;}
-        taskMemory.finishPlan(runtime.taskMemory,'paused','Execution stopped before every step was verified.');
+        taskMemory.finishPlan(runtime.taskMemory,'paused','The model attempted to finish while steps remained incomplete.');
         persistTaskPlan(runtime);
+        addMessage('error','وظیفه هنوز کامل نشده است؛ حداقل یک مرحله تأیید یا تعیین تکلیف نشده باقی مانده. برای جلوگیری از اعلام موفقیت اشتباه، پاسخ نهایی مدل پذیرفته نشد.');
+        finalReceived=true;
+        break;
       }
       if(!calls.length&&runtime.pendingVerification){
         runtime.unansweredVerificationTurns++;
@@ -395,7 +398,11 @@ async function send(){
         const p=runtime.pendingVerification;
         runtime.pendingVerification=null;
         runtime.lastVerification={...p,status:'unverified',reason:'The model did not obtain a fresh screen observation.'};
-        addMessage('error','نتیجهٔ آخرین اقدام قابل تأیید نیست؛ برای جلوگیری از اعلام موفقیت اشتباه، اجرای خودکار متوقف شد.');
+        if(runtime.taskMemory?.status==='active'){
+          taskMemory.finishPlan(runtime.taskMemory,'paused','The last UI action could not be verified.');
+          persistTaskPlan(runtime);
+        }
+        addMessage('error','نتیجهٔ آخرین اقدام قابل تأیید نیست؛ وظیفه متوقف شد و هیچ موفقیتی اعلام نمی‌شود.');
         finalReceived=true;break;
       }
       const content={role:'assistant',content:message.content||null};
