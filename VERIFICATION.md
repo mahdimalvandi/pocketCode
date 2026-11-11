@@ -1,5 +1,14 @@
 # Verification log
 
+## v0.8.0 candidate / one-shot visual tap
+
+- Added `tap_screen` through Android `AccessibilityService.dispatchGesture`, with `canPerformGestures=true` in the service metadata.
+- Every tap requires fresh native approval, even in automatic-navigation mode. It requires the exact `screenshotId` from the current `capture_screen`, expires after 20 seconds, is consumed before dispatch, and is bound to the same active package/window/bounds. Image-pixel coordinates are converted to display/window coordinates and rejected outside the app window.
+- Obvious English/Persian labels for send, submit, delete, payment, transfer, authentication, permissions and similar effects are blocked heuristically. This list is incomplete and does not replace user review.
+- Added eight JVM unit tests for coordinate mapping, display-to-window clipping, invalid dimensions and sensitive label handling.
+- **Not built or tested in this task, by request.** GitHub Actions remains manual-only; no workflow was dispatched.
+- **Requires later batch verification:** JS syntax, Android compile/lint/package, test suite, real-device gesture support and coordinate accuracy at different DPIs/rotations, app-switch/layout-change/expiry handling, denial/cancellation, custom controls and actual post-tap verification. Verify that gesture dispatch does not interrupt other active gestures unexpectedly.
+
 ## v0.7.0 candidate / visual screen understanding
 
 - Implemented `capture_screen` through Android AccessibilityService screenshot APIs (Android 11+); Android 14+ uses active-window capture, Android 11–13 use display capture.
