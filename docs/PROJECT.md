@@ -14,8 +14,8 @@ Pocket Code is a personal Android coding/phone assistant inspired by OpenCode's 
 | Workspace | App-private UTF-8 text files; list/read/create/overwrite/delete; mutations require native approval |
 | Selected phone folder | Android SAF tree chosen by user; read/list/write; overwrite confirmation; no guaranteed atomic writes |
 | Broad phone reading | One-time app consent plus OS all-files/legacy permission; read-only adapter; discover roots, list 200 entries/page, read UTF-8 up to 512 KB |
-| App control | Accessibility screen text, fresh element IDs, click, text entry, scroll, back; launcher discovery/open. On-demand screenshot fallback (API 30+) for visual understanding, with native per-image approval and no coordinate clicks |
-| Automatic navigation | Opt-in; ordinary operations skip repeated confirmation; sensitive/unknown clicks still prompt. Screenshot capture always prompts separately |
+| App control | Accessibility screen text, fresh element IDs, click, text entry, scroll, back; launcher discovery/open. On-demand screenshot fallback (API 30+) and one-shot `tap_screen` from a fresh screenshot, each requiring native approval |
+| Automatic navigation | Opt-in; ordinary operations skip repeated confirmation; sensitive/unknown clicks still prompt. Screenshot capture and every visual tap always prompt separately |
 | Voice | Manual Gemini dictation remains review-before-send. Optional Pocket Code wake phrase uses Android on-device Persian recognition while the app is foreground; after a beep, VAD-bounded audio is sent to Gemini and the transcript is auto-submitted to the existing agent loop. |
 | Persistence | Chat sessions in WebView localStorage; credentials encrypted via Android Keystore |
 
@@ -25,7 +25,7 @@ The user explicitly asked for reads and ordinary clicks without repeated approva
 Broad file reading is separate from Accessibility and selected-folder permission. All-files access does not unlock `/data/data`, other apps' private stores or all protected `Android/data` paths. Its OS grant permits writes, although this adapter exposes only reads. Editing original phone files still uses the separately chosen SAF tree.
 
 ## Non-goals / unsupported
-No shell, root, arbitrary code runtime, package installation, Git engine, MCP runtime, passive background recording, background wake-word service, direct Telegram account API, binary/PDF/image extraction, coordinate-tap fallback or reliable unattended background engine. Telegram is controlled only through visible Accessibility nodes.
+No shell, root, arbitrary code runtime, package installation, Git engine, MCP runtime, passive background recording, background wake-word service, direct Telegram account API, binary/PDF/image extraction, swipe/drag/long-press gestures or reliable unattended background engine. Visual tapping is limited to one approved coordinate on a fresh screenshot.
 
 ## Typical flows
 1. Install over existing signed APK; import private router connection via Settings; never paste keys in chat.
