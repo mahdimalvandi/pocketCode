@@ -79,6 +79,8 @@ public final class MainActivity extends Activity {
     private byte[] exportBytes;
     private JSONObject pendingFolder;
     private AlertDialog nativeApproval;
+    private volatile boolean agentRunActive;
+    private static volatile MainActivity currentActivity;
     private boolean foreground;
     private VoiceRecorder voiceRecorder;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -89,6 +91,7 @@ public final class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        currentActivity=this;
         getWindow().setStatusBarColor(Color.rgb(17, 17, 19));
         getWindow().setNavigationBarColor(Color.rgb(17, 17, 19));
         if (Build.VERSION.SDK_INT >= 30) getWindow().setDecorFitsSystemWindows(true);
@@ -200,6 +203,9 @@ public final class MainActivity extends Activity {
         if (payload == null) payload = new JSONObject();
         Object result;
         switch (action) {
+            case "agentRunState":
+                agentRunActive=payload.optBoolean("active",false);
+                result=new JSONObject().put("ok",true);break;
             case "setAutomaticNavigation":
                 if(!payload.optBoolean("enabled")){
                     preferences.edit().putBoolean("automaticNavigation",false).commit();
@@ -430,10 +436,20 @@ public final class MainActivity extends Activity {
             android.widget.TextView text=new android.widget.TextView(this);
             text.setText(detail.length()>550000?detail.substring(0,550000):detail);text.setTextIsSelectable(true);text.setPadding(32,20,32,20);
             android.widget.ScrollView scroll=new android.widget.ScrollView(this);scroll.addView(text);
-            nativeApproval=new AlertDialog.Builder(this).setTitle(title).setView(scroll)
+            AlertDialog.Builder builder=new AlertDialog.Builder(this).setTitle(title).setView(scroll)
                 .setNegativeButton("رد کردن",(d,w)->{nativeApproval=null;respond(message,null,"User denied this operation.");})
-                .setPositiveButton("اجازه فقط همین بار",(d,w)->{nativeApproval=null;try{approved.run();}catch(Exception e){respond(message,null,e instanceof FriendlyException?e.getMessage():"Operation could not be completed.");}})
-                .setOnCancelListener(d->{nativeApproval=null;respond(message,null,"Operation cancelled.");}).create();
+                .setPositiveButton("اجازه فقط همین بار",(d,w)->{nativeApproval=null;try{approved.run();}catch(Exception e){respond(message,null,e instanceof FriendlyException?e.getMessage():"Operation could not be completed.");}});
+            if(agentRunActive){
+                builder.setNeutralButton("توقف Agent",(d,w)->{
+                    nativeApproval=null;
+                    agentRunActive=false;
+                    preferences.edit().putBoolean("automaticNavigation",false).commit();
+                    if(PhoneAccessService.current()!=null)PhoneAccessService.current().stopAutomation();
+                    notifyWeb("agentStopRequested","native_approval");
+                    respond(message,null,"User stopped the Agent and denied this operation.");
+                });
+            }
+            nativeApproval=builder.setOnCancelListener(d->{nativeApproval=null;respond(message,null,"Operation cancelled.");}).create();
             nativeApproval.getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);
             nativeApproval.show();
         });
@@ -890,15 +906,34 @@ public final class MainActivity extends Activity {
         }
     }
 
+    public static boolean isAgentRunActive() {
+        MainActivity activity=currentActivity;
+        return activity!=null && activity.agentRunActive;
+    }
+
+    public static void requestAgentStopFromPhoneApproval() {
+        MainActivity activity=currentActivity;
+        if(activity==null)return;
+        activity.runOnUiThread(() -> {
+            if(!activity.agentRunActive)return;
+            activity.agentRunActive=false;
+            if(activity.preferences!=null)activity.preferences.edit().putBoolean("automaticNavigation",false).commit();
+            PhoneAccessService service=PhoneAccessService.current();
+            if(service!=null)service.stopAutomation();
+            activity.notifyWeb("agentStopRequested","accessibility_approval");
+        });
+    }
+
     private void notifyWeb(String type,String value) {
         try {
             JSONObject event=new JSONObject().put("type",type).put("value",value==null?"":value);
             String json=event.toString().replace("\u2028","\\u2028").replace("\u2029","\\u2029");
-            mainHandler.post(() -> {
+            Runnable delivery=() -> {
                 if ("wakeCommand".equals(type) && (!foreground || !preferences.getBoolean("wakeWordEnabled",false))) return;
                 if(!destroyed && webView!=null && isHome(webView.getUrl()==null?"":webView.getUrl()))
                     webView.evaluateJavascript("if(typeof window.onNativeEvent==='function'){window.onNativeEvent("+json+");}",null);
-            });
+            };
+            if(Looper.myLooper()==Looper.getMainLooper())delivery.run();else mainHandler.post(delivery);
         } catch(Exception ignored) { }
     }
 
@@ -927,6 +962,7 @@ public final class MainActivity extends Activity {
 
     @Override protected void onDestroy() {
         destroyed = true;
+        if(currentActivity==this)currentActivity=null;
         stopWakeWordListener();
         if(wakeCommandProcessing)cancelWakeCommandProcessing();
         if(nativeApproval!=null)nativeApproval.dismiss();

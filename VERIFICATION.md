@@ -1,5 +1,15 @@
 # Verification log
 
+## v0.13.0 candidate / persistent stop control
+
+- Added a chat-header stop button that appears during an active Agent run. Stop requests immediately update WebView run state and block subsequent model/tool operation starts at the loop boundaries, including later members of a read batch.
+- The stop request also disables automatic navigation through the existing native bridge action. Because bridge work is serialized, this request may wait for the current native call. In-flight model HTTP and phone operations may finish; there is no rollback or guaranteed cancellation.
+- The active-run native confirmation dialog and the in-app file approval dialog expose dedicated stop options. The native stop event is delivered to WebView before the denied-operation response to avoid a race that could start another tool.
+- Active task plans are paused after stop. Pending UI actions without a fresh observation remain unverified.
+- Added a pure run-control policy and Node tests for idempotence, stop-state gating and the semantics of already-started work.
+- **Not run, not built and not device-tested by request.** No GitHub Actions workflow was dispatched. JS syntax/tests, Chrome responsive interaction checks, Android build/lint and physical-device stop tests remain for the combined final validation.
+- **Requires later checks:** tap stop during a long 9Router request, during a shared-storage read, during a UI action, between calls in a batch, and while a task plan or UI-verification checkpoint is active; verify that new operations never begin after the boundary and that completed native side effects are not described as cancelled.
+
 ## v0.12.0 candidate / execution timeline
 
 - Added a per-chat collapsible execution history capped at 100 events. It tracks tool labels, local timestamps, elapsed duration and constrained operation states. Tool calls inside permitted read batches are recorded individually, as are deferred calls.

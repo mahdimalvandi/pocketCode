@@ -12,6 +12,7 @@
   <script src="agent-task-memory.js" defer></script>
   <script src="agent-tool-batching.js" defer></script>
   <script src="agent-execution-timeline.js" defer></script>
+  <script src="agent-run-control.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -19,7 +20,7 @@
   <header class="topbar">
     <button class="icon-button" id="menu-button" aria-label="جلسه‌ها"><span class="menu-icon"></span></button>
     <div class="brand" dir="ltr"><span class="logo">▣</span> pocket<span class="brand-light">code</span><span class="alpha">α</span></div>
-    <button class="icon-button" id="new-button" aria-label="جلسه جدید">＋</button>
+    <div class="topbar-actions"><button class="stop-button" id="stop-button" type="button" aria-label="توقف اجرای Agent" hidden disabled>■ توقف</button><button class="icon-button" id="new-button" aria-label="جلسه جدید">＋</button></div>
   </header>
   <div class="workspace-bar"><span class="status-dot"></span><span>فضای کاری گوشی</span><span class="workspace-path" dir="ltr">~/workspace</span></div>
   <main id="chat" aria-label="گفتگو" aria-live="polite">
@@ -57,7 +58,7 @@
         <div class="composer-end"><button class="icon-button mic" id="voice-button" aria-label="ورودی صوتی">♩</button><button class="send-button" id="send-button" aria-label="ارسال پیام">↑</button></div>
       </div>
     </div>
-    <div class="composer-caption"><span id="connection-label">فایل اتصال 9Router را وارد کن</span><span dir="ltr">BUILD · v0.12</span></div>
+    <div class="composer-caption"><span id="connection-label">فایل اتصال 9Router را وارد کن</span><span dir="ltr">BUILD · v0.13</span></div>
   </footer>
   <nav class="bottom-nav" aria-label="بخش‌های برنامه">
     <button class="active" id="chat-tab"><span>▤</span>گفتگو</button><button id="files-tab"><span>▱</span>فایل‌ها</button><button id="access-tab"><span>⌘</span>دسترسی‌ها</button><button id="settings-tab"><span>⚙</span>تنظیمات</button>
@@ -87,7 +88,7 @@
 <dialog id="access-dialog">
   <div class="dialog-heading"><h2>کار روی گوشی، با اجازهٔ تو</h2><button class="icon-button" data-close aria-label="بستن">×</button></div>
   <h2>کنترل خودکار کارهای معمولی</h2>
-  <p class="muted">در حالت خودکار، خواندن، بازکردن اپ، تایپ و کلیک معمولی بدون پرسش انجام می‌شود. ارسال پیام، حذف، پرداخت و تغییر فایل تأیید می‌خواهند. تشخیص دکمه‌های حساس تضمینی نیست؛ روی صفحات حساس استفاده نکن.</p>
+  <p class="muted">در حالت خودکار، خواندن، بازکردن اپ، تایپ و کلیک معمولی بدون پرسش انجام می‌شود. ارسال پیام، حذف، پرداخت و تغییر فایل تأیید می‌خواهند. هنگام اجرای Agent، دکمهٔ توقف در نوار بالای گفتگو هم در دسترس است؛ عملیات جاری ممکن است کامل شود و قابل بازگردانی نیست. تشخیص دکمه‌های حساس تضمینی نیست؛ روی صفحات حساس استفاده نکن.</p>
   <p class="muted" id="automatic-status">کنترل خودکار خاموش است</p>
   <div class="file-actions"><button class="primary" id="automatic-enable">فعال‌کردن کنترل خودکار</button><button class="secondary" id="automatic-stop">توقف کنترل خودکار</button></div>
   <h2>خواندن حافظهٔ مشترک گوشی</h2>
@@ -112,6 +113,6 @@
 </dialog>
 <dialog id="shared-dialog"><div class="dialog-heading"><h2>پوشهٔ متصل گوشی</h2><button class="icon-button" data-close aria-label="بستن">×</button></div><p class="muted" id="shared-path" dir="ltr">/</p><button class="secondary" id="shared-up-button">پوشه بالاتر</button><div id="shared-list"></div></dialog>
 <dialog id="phone-files-dialog"><div class="dialog-heading"><h2>حافظه گوشی · فقط خواندن</h2><button class="icon-button" data-close aria-label="بستن">×</button></div><p class="muted" id="phone-files-path" dir="ltr">حافظه‌ها</p><button class="secondary" id="phone-files-up">بالا / حافظه‌ها</button><div id="phone-files-list"></div><button class="secondary" id="phone-files-more" hidden>صفحه بعد</button></dialog>
-<dialog id="approval-dialog"><div class="dialog-heading"><h2 id="approval-title">اجازهٔ نوشتن فایل</h2></div><p class="muted" id="approval-description">Gemini می‌خواهد این فایل را در فضای کاری گوشی ایجاد یا بازنویسی کند. محتوا را قبل از تأیید بررسی کن.</p><strong id="approval-path" dir="ltr"></strong><pre id="approval-content"></pre><div class="file-actions"><button class="primary" id="approve-button">تأیید و ذخیره</button><button class="secondary" id="deny-button">رد کردن</button></div></dialog>
+<dialog id="approval-dialog"><div class="dialog-heading"><h2 id="approval-title">اجازهٔ نوشتن فایل</h2></div><p class="muted" id="approval-description">Gemini می‌خواهد این فایل را در فضای کاری گوشی ایجاد یا بازنویسی کند. محتوا را قبل از تأیید بررسی کن.</p><strong id="approval-path" dir="ltr"></strong><pre id="approval-content"></pre><div class="file-actions"><button class="primary" id="approve-button">تأیید و ذخیره</button><button class="secondary" id="deny-button">رد کردن</button><button class="stop-button" id="stop-approval-button" type="button">رد و توقف Agent</button></div></dialog>
 </body>
 </html>

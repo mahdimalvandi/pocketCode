@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.13.0 (candidate)
+- Added a persistent stop button to the chat header while the Agent is running.
+- Added a per-run stop state checked at model and tool-operation boundaries; new model/tool operations and later members of a batched read sequence are not started after a stop request.
+- Stop also disables the existing automatic-navigation setting. An in-flight 9Router request or Android operation may still finish because native bridge calls are serialized; completed side effects are not rolled back.
+- Added explicit stop options to the in-app file approval and active native Android confirmation dialogs so modal prompts do not block access to the stop path.
+- Pauses an active task plan and marks any pending UI result unverified. A later user send starts a new run-control state; automatic navigation must be explicitly re-enabled.
+- Added a pure run-control module and Node tests. Not run, not built and not device-tested in this task; no GitHub Actions run.
+
 ## 0.12.0 (candidate)
 - Added a collapsible execution timeline for each chat, capped at 100 events and restored independently with that session.
 - Records static tool labels, local start time, elapsed duration and bounded states for running, approval, UI verification, observed, failed, denied, unverified and not-executed operations. Tool calls from a permitted batch receive individual entries.

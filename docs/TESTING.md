@@ -3,11 +3,12 @@
 `VERIFICATION.md` records actual results per version. This document defines what to verify; checklist items are not claims that tests passed.
 
 ## Automated/local baseline
-- `node --check app/src/main/assets/agent-reliability.js`, `node --check app/src/main/assets/agent-task-memory.js`, `node --check app/src/main/assets/agent-tool-batching.js`, `node --check app/src/main/assets/agent-execution-timeline.js` and `node --check app/src/main/assets/app.js`.
+- `node --check app/src/main/assets/agent-reliability.js`, `node --check app/src/main/assets/agent-task-memory.js`, `node --check app/src/main/assets/agent-tool-batching.js`, `node --check app/src/main/assets/agent-execution-timeline.js`, `node --check app/src/main/assets/agent-run-control.js` and `node --check app/src/main/assets/app.js`.
 - `node --test app/src/test/js/agent-reliability.test.js` (verification gating, failure classification and retry safety).
 - `node --test app/src/test/js/agent-task-memory.test.js` (plan validation, bounded/sanitized storage, ordered step transitions, completion checks, blocked steps and explicit resume).
 - `node --test app/src/test/js/agent-tool-batching.test.js` (batch safety classification, bounds, task/verification gating and mixed-call fallback).
 - `node --test app/src/test/js/agent-execution-timeline.test.js` (event bounds, persistence sanitization, duration/status transitions, approval states, UI-verification states and failure classification).
+- `node --test app/src/test/js/agent-run-control.test.js` (immediate stop state, idempotent requests, operation-boundary gating and in-flight completion semantics).
 - `gradle testDebugUnitTest` (wake-phrase normalization, PCM RMS threshold, trailing-silence state transitions, WAV header/encoding, visual-tap coordinate mapping and sensitive-label deny-list).
 - `gradle lintDebug` and `gradle assembleDebug`.
 - Verify debug APK with `apksigner`, confirm package/version metadata with `aapt dump badging`, and check ZIP integrity with `unzip -t`.
@@ -35,6 +36,15 @@ With a mock native bridge test:
 - Voice start/stop/cancel/error; disabled states; transcript insertion; absolutely no automatic chat submission.
 - Empty transcript and reopened recording dialog; permission denied and router failure messages.
 
+
+
+Stop-control mock checks:
+- Stop button is hidden when idle, visible/enabled while the Agent is busy, and becomes disabled with a stopping label after a stop request.
+- A stop request during a 9Router response prevents processing its returned final answer or starting any returned tool calls; a stop request during a tool call allows that call to settle but prevents the next tool, including the next item in a read batch.
+- Verify the active task plan is paused, pending UI verification is marked unverified, and no false completion is shown.
+- Verify the stop button is keyboard/touch accessible at 393×852 and narrow 360px layouts, and that the normal send/new-chat controls recover after the run exits.
+- Confirm the UI notice states that current native work may complete and completed side effects are not rolled back. Re-enabling automatic navigation requires the existing explicit user action.
+- Verify the in-app file approval dialog offers `رد و توقف Agent`, and an active native Android confirmation dialog offers its conditional `توقف Agent` action. The native stop event must set the WebView stop flag before the denied-operation response can lead to another tool call.
 
 Execution timeline mock checks:
 - Verify one event is created for every executed tool call, including local task tools and each member of a permitted batch; deferred calls are clearly marked not_executed.
