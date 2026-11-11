@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.0 (candidate)
+- Added `tap_screen` for exactly one tap at image-pixel x/y from the latest approved `capture_screen` image.
+- Every tap requires a native approval even in automatic-navigation mode. The screenshot ID is one-time, expires after 20 seconds and must match the active package, window ID and bounds.
+- Maps image pixels into screen coordinates; rejects coordinates outside the active app window and uses a conservative English/Persian deny-list for obvious sensitive-action labels.
+- Requires Accessibility `canPerformGestures`; no swipe, drag, long-press, tap chaining or background gesture execution.
+- Added eight JVM unit tests for coordinate mapping and label filtering. Not built or device-tested in this task.
+
 ## 0.7.0 (candidate)
 - Added `capture_screen` as an on-demand visual fallback when Accessibility text is insufficient. Native approval is required for every capture, even in automatic-navigation mode.
 - Captures the active app window on Android 14+ and the display on Android 11–13; known blocked packages are rejected before and after approval.
