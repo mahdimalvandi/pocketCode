@@ -4,7 +4,7 @@
 
 ## Automated/local baseline
 - `node --check app/src/main/assets/app.js`.
-- `gradle testDebugUnitTest` (wake-phrase normalization, PCM RMS threshold, trailing-silence state transitions, WAV header/encoding).
+- `gradle testDebugUnitTest` (wake-phrase normalization, PCM RMS threshold, trailing-silence state transitions, WAV header/encoding, visual-tap coordinate mapping and sensitive-label deny-list).
 - `gradle lintDebug` and `gradle assembleDebug`.
 - Verify debug APK with `apksigner`, confirm package/version metadata with `aapt dump badging`, and check ZIP integrity with `unzip -t`.
 - CI uploads JUnit XML and the Android Lint HTML report for inspection.
@@ -17,6 +17,7 @@ Open local assets server; inspect DOM and screenshot at 393×852 and desktop. Ch
 With a mock native bridge test:
 - Error/denial recovery; first-tool-only behavior; no false success on tool failure.
 - `capture_screen` approval denial must result in zero screenshot upload; approval adds a multimodal data-URL image only to the current `send()` request loop, with no Base64 in session/localStorage/tool-result messages.
+- Visual tap: tool schema carries screenshotId and image-space x/y; no action without the exact current token; token is consumed after one attempt; denied/cancelled taps are not retried; tap forces fresh screen verification and clears the old in-memory image.
 - Automatic-navigation on/off status and current-loop stop.
 - Storage-root navigation, paginated listing, UTF-8 display and consent revocation.
 - Voice start/stop/cancel/error; disabled states; transcript insertion; absolutely no automatic chat submission.
@@ -32,6 +33,7 @@ With a mock native bridge test:
 | SAF mutation | Cancel approval, approve disposable overwrite, missing parent, read-only provider, interrupted write |
 | Accessibility | Read non-sensitive notes app; fresh IDs; stale nodes; app change; keyboard/password field; blocked package |
 | Screenshot | Android 11/12/13 display capture; Android 14+ active-window capture; explicit approval even in automatic mode; reject blocked packages; capture failure/secure-window behavior; JPEG size cap; verify image not persisted in localStorage; model vision request failure path |
+| Visual tap | `canPerformGestures` registration; exact x/y mapping on multiple DPIs/rotations; reject status/navigation bars and points outside app bounds; stale/wrong screenshotId, expired token, changed package/window/bounds; sensitive English/Persian label rejection; approval denial; gesture cancelled/refused; verify one tap only and fresh-screen verification |
 | Telegram | Open, search contact, click result's ancestor, verify chat header, type draft, cancel send approval, approve disposable send only |
 | Sensitive effects | English/Persian send/delete/payment labels; unlabelled control; model false-negative flag; changed target |
 | Stop | Stop during model request, pending overlay and between actions; no next action; no undo claim |
