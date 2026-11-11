@@ -1,3 +1,5 @@
+# Verification log
+
 ## v0.12.0 candidate / execution timeline
 
 - Added a per-chat collapsible execution history capped at 100 events. It tracks tool labels, local timestamps, elapsed duration and constrained operation states. Tool calls inside permitted read batches are recorded individually, as are deferred calls.

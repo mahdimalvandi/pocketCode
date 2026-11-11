@@ -1,13 +1,5 @@
 # Pocket Code · Android alpha
 
-**Current source candidate: 0.8.0 (personal-testing alpha).** The visual screenshot and tap features are source-only and have not been built or device-tested yet. The checked-in APK remains the previous 0.5.0 build until a batched build and validation. Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
-
-## v0.8.0 candidate: visual tap from a fresh screenshot
-
-When `read_screen` cannot expose a custom control, the Agent can request `capture_screen`, inspect the returned image and request `tap_screen` with x/y pixel coordinates and the exact `screenshotId` from that capture. Android asks for a separate native confirmation for every tap, even in automatic-navigation mode. Each token is one-use, expires after 20 seconds, and is rejected if the package, window ID or window bounds change. Coordinates are mapped from image pixels to screen coordinates and must land inside the active app window; on Android 11–13 the screenshot itself is the display, but the tap remains restricted to the app window. Obvious send/delete/payment/authorization labels are rejected heuristically. Only one short tap is supported—no drag, swipe, long-press or tap chains. After a tap, the Agent must obtain a fresh screen read/capture. **This source candidate has not been built or tested on a phone.**
-
-# Pocket Code · Android alpha
-
 **Current source candidate: 0.12.0 (personal-testing alpha).** The execution timeline is new source-only work and has not been built, run through the automated test suite, or device-tested yet. The checked-in APK remains the older 0.5.0 build until a batched build and validation. Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
 
 ## v0.12.0 candidate: execution timeline
