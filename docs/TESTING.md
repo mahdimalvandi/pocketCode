@@ -3,7 +3,8 @@
 `VERIFICATION.md` records actual results per version. This document defines what to verify; checklist items are not claims that tests passed.
 
 ## Automated/local baseline
-- `node --check app/src/main/assets/app.js`.
+- `node --check app/src/main/assets/agent-reliability.js` and `node --check app/src/main/assets/app.js`.
+- `node --test app/src/test/js/agent-reliability.test.js` (verification gating, failure classification and retry safety).
 - `gradle testDebugUnitTest` (wake-phrase normalization, PCM RMS threshold, trailing-silence state transitions, WAV header/encoding, visual-tap coordinate mapping and sensitive-label deny-list).
 - `gradle lintDebug` and `gradle assembleDebug`.
 - Verify debug APK with `apksigner`, confirm package/version metadata with `aapt dump badging`, and check ZIP integrity with `unzip -t`.
@@ -16,6 +17,10 @@ Open local assets server; inspect DOM and screenshot at 393×852 and desktop. Ch
 
 With a mock native bridge test:
 - Error/denial recovery; first-tool-only behavior; no false success on tool failure.
+- After every UI-changing action, reject another UI action or a final response until a fresh `read_screen` / `capture_screen` observation is returned with the same action ID and expected outcome.
+- Confirm the Agent compares actual screen evidence against the expected outcome and never treats native `ok=true` as proof of success.
+- Test denied and blocked observations, stale element IDs, unavailable controls, permission failures, two failed observation attempts, model refusal to verify, stop during a checkpoint, and the 24-turn limit.
+- Verify that transient broad-storage read failures retry at most once; never retry taps, clicks, navigation, writes or other side effects automatically. Denied/blocked verification must prevent UI-action bypass.
 - `capture_screen` approval denial must result in zero screenshot upload; approval adds a multimodal data-URL image only to the current `send()` request loop, with no Base64 in session/localStorage/tool-result messages.
 - Visual tap: tool schema carries screenshotId and image-space x/y; no action without the exact current token; token is consumed after one attempt; denied/cancelled taps are not retried; tap forces fresh screen verification and clears the old in-memory image.
 - Automatic-navigation on/off status and current-loop stop.
@@ -33,6 +38,8 @@ With a mock native bridge test:
 | SAF mutation | Cancel approval, approve disposable overwrite, missing parent, read-only provider, interrupted write |
 | Accessibility | Read non-sensitive notes app; fresh IDs; stale nodes; app change; keyboard/password field; blocked package |
 | Screenshot | Android 11/12/13 display capture; Android 14+ active-window capture; explicit approval even in automatic mode; reject blocked packages; capture failure/secure-window behavior; JPEG size cap; verify image not persisted in localStorage; model vision request failure path |
+| Action verification | Checkpoint after open/click/type/scroll/back/tap; runtime gates next UI action/final response; only fresh screen tree/image completes readback; denied/blocked readback freezes UI actions; unverified actions are not reported as successful |
+| Recovery engine | User denial is terminal; permission needs user action; blocked target stops; stale IDs require fresh reads; unavailable controls require re-observation; only transient broad-storage reads retry once; no side-effect replay |
 | Visual tap | `canPerformGestures` registration; exact x/y mapping on multiple DPIs/rotations; reject status/navigation bars and points outside app bounds; stale/wrong screenshotId, expired token, changed package/window/bounds; sensitive English/Persian label rejection; approval denial; gesture cancelled/refused; verify one tap only and fresh-screen verification |
 | Telegram | Open, search contact, click result's ancestor, verify chat header, type draft, cancel send approval, approve disposable send only |
 | Sensitive effects | English/Persian send/delete/payment labels; unlabelled control; model false-negative flag; changed target |

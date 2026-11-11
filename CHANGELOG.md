@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0 (candidate)
+- Added a runtime-enforced verification checkpoint after every UI-changing phone action. The Agent must obtain a fresh `read_screen` or approved `capture_screen` observation before another UI action or final answer.
+- Each checkpoint records a per-action ID, expected outcome and whether Android accepted the request. The fresh observation is attached to the matching tool result; typed text is deliberately omitted from verification summaries.
+- Added recovery categories for user denial, blocked target, missing permission, stale UI IDs, unavailable controls, transient failures and unknown outcomes.
+- Only transient failures from idempotent broad-storage reads may be retried once. UI actions, taps and file mutations are never automatically replayed; ambiguous outcomes require observation first.
+- A denied or blocked verification cannot be bypassed through another UI action. Added Node built-in policy tests. Not built or device-tested in this task.
+
 ## 0.8.0 (candidate)
 - Added `tap_screen` for exactly one tap at image-pixel x/y from the latest approved `capture_screen` image.
 - Every tap requires a native approval even in automatic-navigation mode. The screenshot ID is one-time, expires after 20 seconds and must match the active package, window ID and bounds.

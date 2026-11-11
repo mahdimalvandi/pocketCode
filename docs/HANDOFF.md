@@ -1,7 +1,7 @@
 # Agent handoff / next work
 
 ## Start here
-Current feature branch snapshot is v0.8.0 source candidate. The 0.6 CI build is historical; the 0.7 screenshot and 0.8 visual-tap additions have not been built or device-tested.
+Current feature branch snapshot is v0.9.0 source candidate. The 0.6 CI build is historical; the 0.7 screenshot and 0.8 visual-tap additions have not been built or device-tested.
 
 ## Delivered and verified
 - APK compiled/signed with the original local personal debug key.
@@ -16,6 +16,13 @@ Current feature branch snapshot is v0.8.0 source candidate. The 0.6 CI build is 
 ## Latest candidate: 0.8.0 one-shot visual tap
 - Added `tap_screen`: exactly one coordinate tap using x/y pixels and `screenshotId` from the latest approved capture. Each tap prompts separately even in automatic mode; token is one-use, 20-second and bound to the same app package/window/bounds. Image-to-screen mapping clips to the active app window. No swipe/drag/long-press exists.
 - Unit tests were authored for coordinate mapping and sensitive-label filtering but have not been run. The source is not built/device-tested. Next batch should validate API 24+ dispatch on real OEM devices, coordinate mapping under rotation and safe rejection of app/window changes. The sensitive-action deny-list is heuristic only.
+
+## Latest candidate: 0.9.0 action verification and recovery
+- Added a runtime-enforced checkpoint after `open_app`, `click_element`, `tap_screen`, `type_text`, `scroll_element` and `phone_back`. Before the model can call another UI tool or return a final answer, it must obtain a fresh `read_screen` or `capture_screen` observation. The expected postcondition and a per-action ID accompany that observation.
+- The model compares the fresh screen with the expected result; native `ok=true` is explicitly not treated as proof of success. Typed field contents are deliberately omitted from verification summaries.
+- Added recovery categories for denial, blocked target, missing permission, stale screen/element, unavailable target, transient and unknown failures. A transient failure may be retried once only for idempotent broad-storage reads. UI actions and writes are never automatically replayed.
+- A denied or blocked readback prevents other UI actions from bypassing the stop. If observation fails twice, the action remains unverified and cannot be repeated with the same tool.
+- Added Node built-in tests for the reliability policy. **Not built or tested in this task; GitHub Actions remains manual-only.**
 
 ## Highest-priority follow-up
 1. **Actual Telegram reproduction:** capture redacted Accessibility tree and error; confirm clickable-ancestor fix. A plausible code defect was fixed, but it is not a confirmed diagnosis. Do not add blind coordinate taps as an easy workaround.

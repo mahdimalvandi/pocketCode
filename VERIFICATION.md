@@ -1,5 +1,16 @@
 # Verification log
 
+## v0.9.0 candidate / action verification and recovery
+
+- Added `agent-reliability.js` as a pure policy module shared by the WebView runtime and Node's built-in test runner.
+- Every UI-changing action now creates an action-ID checkpoint with its expected outcome and native API acceptance state. The Agent cannot take another UI action or return a final answer until it obtains a fresh Accessibility screen read or approved screenshot. The observation is attached to the matching tool result for model comparison.
+- A native `ok=true` is treated only as request acceptance, not proof that the intended UI state occurred. Typed text is omitted from the verification summary.
+- Added conservative recovery categories for user denial, blocked target, missing permission, stale UI, unavailable target, transient failure and unknown outcome. Only transient failures from idempotent broad-storage reads may be retried once. UI actions and file mutations are never automatically replayed.
+- Denied/blocked verification cannot be bypassed with another UI action. If an observation is denied or fails twice, the action is marked unverified and the same action is not automatically repeated.
+- Added ten Node tests covering action classification, observation gating, sensitive-text omission, denials, stale IDs, ambiguous side effects, safe-read retry eligibility and blocked-action bypass.
+- **Not built and not executed in this task, by request.** No GitHub Actions workflow was dispatched. JS syntax and Node tests remain pending the next batched validation.
+- **Requires later checks:** node syntax and tests; mock a multi-step action→readback flow; test premature final response prevention, denial, blocked target, stale IDs, unavailable screen, model ignoring the checkpoint, stop behavior and router/native errors. Confirm that fresh evidence contradicting the expected outcome is not described as success.
+
 ## v0.8.0 candidate / one-shot visual tap
 
 - Added `tap_screen` through Android `AccessibilityService.dispatchGesture`, with `canPerformGestures=true` in the service metadata.
