@@ -1,7 +1,7 @@
 # Agent handoff / next work
 
 ## Start here
-Current feature branch snapshot is v0.6.0 candidate; its CI build and host-side tests pass, but the foreground wake flow still needs physical-device verification. Read root `AGENTS.md` and the other docs before implementing. The owner prefers Persian conversation, an actual standalone Android app, existing 9Router credentials and low-friction ordinary navigation. They explicitly retained approval for sensitive operations, including sending messages and changing files.
+Current feature branch snapshot is v0.8.0 source candidate. The 0.6 CI build is historical; the 0.7 screenshot and 0.8 visual-tap additions have not been built or device-tested.
 
 ## Delivered and verified
 - APK compiled/signed with the original local personal debug key.
@@ -12,6 +12,10 @@ Current feature branch snapshot is v0.6.0 candidate; its CI build and host-side 
 ## Latest candidate: 0.7.0 visual screen understanding
 - Added an explicitly approved `capture_screen` fallback when the Accessibility tree cannot represent the UI. It sends a bounded JPEG as multimodal image input to the configured 9Router model, only for the current Agent run and without local persistence. No coordinate gestures were added.
 - Still requires batch build/lint and physical-device tests. Android 14+ active-window capture and Android 11–13 display capture need separate verification; blocked-package heuristics are not exhaustive and FLAG_SECURE behavior is not guaranteed. Confirm that the selected 9Router model supports `image_url` content.
+
+## Latest candidate: 0.8.0 one-shot visual tap
+- Added `tap_screen`: exactly one coordinate tap using x/y pixels and `screenshotId` from the latest approved capture. Each tap prompts separately even in automatic mode; token is one-use, 20-second and bound to the same app package/window/bounds. Image-to-screen mapping clips to the active app window. No swipe/drag/long-press exists.
+- Unit tests were authored for coordinate mapping and sensitive-label filtering but have not been run. The source is not built/device-tested. Next batch should validate API 24+ dispatch on real OEM devices, coordinate mapping under rotation and safe rejection of app/window changes. The sensitive-action deny-list is heuristic only.
 
 ## Highest-priority follow-up
 1. **Actual Telegram reproduction:** capture redacted Accessibility tree and error; confirm clickable-ancestor fix. A plausible code defect was fixed, but it is not a confirmed diagnosis. Do not add blind coordinate taps as an easy workaround.
