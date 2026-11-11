@@ -23,7 +23,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - run: node --check app/src/main/assets/agent-reliability.js
       - run: node --check app/src/main/assets/app.js
+      - run: node --test app/src/test/js/agent-reliability.test.js
       - run: gradle testDebugUnitTest --no-daemon
       - run: gradle lintDebug --no-daemon
       - run: gradle assembleDebug --no-daemon
@@ -31,7 +33,7 @@ jobs:
         run: |
           APK=app/build/outputs/apk/debug/app-debug.apk
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$APK"
-          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -F "package: name='dev.pocketcode.app' versionCode='8' versionName='0.8.0'"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -F "package: name='dev.pocketcode.app' versionCode='9' versionName='0.9.0'"
           unzip -t "$APK"
       - uses: actions/upload-artifact@v4
         with:

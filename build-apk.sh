@@ -20,7 +20,7 @@ PY
 "$TOOLS/aapt2" link -o "$OUT/unsigned.apk" -I "$ANDROID_JAR" \
   --manifest "$OUT/AndroidManifest.xml" \
   --min-sdk-version 26 --target-sdk-version 35 \
-  --version-code 8 --version-name 0.8.0 "$OUT/resources.zip"
+  --version-code 9 --version-name 0.9.0 "$OUT/resources.zip"
 "${JAVA}javac" -encoding UTF-8 -source 17 -target 17 \
   -classpath "$ANDROID_JAR" -d "$OUT/classes" \
   "$ROOT"/app/src/main/java/dev/pocketcode/app/*.java
