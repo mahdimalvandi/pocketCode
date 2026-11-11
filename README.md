@@ -1,6 +1,10 @@
 # Pocket Code · Android alpha
 
-**Current source candidate: 0.6.0 (personal-testing alpha).** CI validation has passed, but the checked-in APK remains the previous 0.5.0 build until physical-device validation. Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
+**Current source candidate: 0.8.0 (personal-testing alpha).** The visual screenshot and tap features are source-only and have not been built or device-tested yet. The checked-in APK remains the previous 0.5.0 build until a batched build and validation. Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
+
+## v0.8.0 candidate: visual tap from a fresh screenshot
+
+When `read_screen` cannot expose a custom control, the Agent can request `capture_screen`, inspect the returned image and request `tap_screen` with x/y pixel coordinates and the exact `screenshotId` from that capture. Android asks for a separate native confirmation for every tap, even in automatic-navigation mode. Each token is one-use, expires after 20 seconds, and is rejected if the package, window ID or window bounds change. Coordinates are mapped from image pixels to screen coordinates and must land inside the active app window; on Android 11–13 the screenshot itself is the display, but the tap remains restricted to the app window. Obvious send/delete/payment/authorization labels are rejected heuristically. Only one short tap is supported—no drag, swipe, long-press or tap chains. After a tap, the Agent must obtain a fresh screen read/capture. **This source candidate has not been built or tested on a phone.**
 
 ## Documentation / agent onboarding
 
@@ -13,7 +17,7 @@ Start with [`AGENTS.md`](AGENTS.md), then:
 - [Next-agent handoff and open issues](docs/HANDOFF.md)
 - [Changelog](CHANGELOG.md)
 
-Checked-in personal-testing APK: [`dist/pocket-code-debug.apk`](dist/pocket-code-debug.apk) (v0.5.0). The CI-built v0.6.0 candidate is available as the `pocket-code-debug-apk` artifact in [workflow run 42788994845](https://github.com/mahdimalvandi/pocketCode/actions/runs/42788994845). A CI debug build may not upgrade a locally signed APK because its signer differs; back up app data and credentials before uninstalling/reinstalling. Source does not include credentials or the original private signing key.
+Checked-in personal-testing APK: [`dist/pocket-code-debug.apk`](dist/pocket-code-debug.apk) (v0.5.0). A prior v0.6.0 CI candidate is available as the `pocket-code-debug-apk` artifact in [workflow run 42788994845](https://github.com/mahdimalvandi/pocketCode/actions/runs/42788994845); it does not include the newer visual-tap source. A CI debug build may not upgrade a locally signed APK because its signer differs; back up app data and credentials before uninstalling/reinstalling. Source does not include credentials or the original private signing key.
 
 The sections below are chronological release notes. **Newer sections supersede older feature/permission descriptions.** Native microphone, Telegram and other cross-app behavior still need physical-device testing. No license has been selected by the owner yet.
 
@@ -24,6 +28,10 @@ Enable **بیدارباش صوتی Pocket Code** in **دسترسی‌ها** and 
 This is deliberately **foreground-only**: listening stops when Pocket Code is paused, sent to the background or closed, and resumes when the app returns. It is not an always-on hotword service. Wake detection stays on-device; only the command recorded after the beep goes to 9Router/upstream provider. The device must support Android's on-device recognizer and have an offline Persian model installed; there is no online wake-word fallback. The old manual microphone flow remains available and still requires the user to review and send its transcript.
 
 The v0.6.0 candidate has passed CI compilation, 17 JVM tests, Android Lint, APK signature/metadata checks and archive integrity validation. It is not yet verified on a physical Android device; microphone behavior, offline Persian recognition, Gemini transcription and end-to-end Agent submission remain untested.
+
+## v0.7 candidate: visual screen understanding
+
+The Agent can request `capture_screen` when Accessibility text is insufficient. Every capture requires native approval, including in automatic-navigation mode. Android 14+ captures the active app window; Android 11–13 capture the display. The compressed JPEG is sent through 9Router and held in memory only for the current Agent run; it is not saved to chat history or disk. Known sensitive/system/financial packages are blocked by heuristics, which are not exhaustive.
 
 ## v0.5: automatic navigation, ancestor clicks and Gemini dictation
 
