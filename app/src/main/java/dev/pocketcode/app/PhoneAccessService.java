@@ -394,7 +394,7 @@ public final class PhoneAccessService extends AccessibilityService {
             boolean ok;
             if (action.equals("click_element")) {
                 AccessibilityNodeInfo target=clickTarget(node);
-                if(target==null)throw new Exception("No clickable ancestor is exposed. Read screen again; coordinate clicking is not available.");
+                if(target==null)throw new Exception("No clickable ancestor is exposed. If the visible control is harmless but missing from Accessibility, use capture_screen, then tap_screen with the fresh screenshotId and explicit approval.");
                 try { if(!String.valueOf(target.getPackageName()).equals(pkg))throw new Exception("Target app changed.");
                     if(!approved&&(sensitive(node,p)||sensitive(target,p)))throw new Exception("Control became sensitive. Request again for approval.");
                     ok=target.performAction(AccessibilityNodeInfo.ACTION_CLICK);
