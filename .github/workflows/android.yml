@@ -1,12 +1,7 @@
 name: Build Android APK
+# Run manually after batching several substantial changes.
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'app/**'
-      - '*.gradle'
-      - 'gradle.properties'
-      - '.github/workflows/android.yml'
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -19,12 +14,38 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
       - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check app/src/main/assets/agent-reliability.js
+      - run: node --check app/src/main/assets/agent-task-memory.js
+      - run: node --check app/src/main/assets/app.js
+      - run: node --test app/src/test/js/agent-reliability.test.js
+      - run: node --test app/src/test/js/agent-task-memory.test.js
+      - run: gradle testDebugUnitTest --no-daemon
+      - run: gradle lintDebug --no-daemon
       - run: gradle assembleDebug --no-daemon
+      - name: Verify debug APK
+        run: |
+          APK=app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$APK"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -F "package: name='dev.pocketcode.app' versionCode='10' versionName='0.10.0'"
+          unzip -t "$APK"
       - uses: actions/upload-artifact@v4
         with:
           name: pocket-code-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pocket-code-verification-reports
+          path: |
+            app/build/test-results/testDebugUnitTest/*.xml
+            app/build/reports/lint-results-debug.html
+          if-no-files-found: warn

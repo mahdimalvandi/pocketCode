@@ -1,6 +1,10 @@
 # Pocket Code · Android alpha
 
-**Current release: 0.5.0 (personal-testing alpha).** Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
+**Current source candidate: 0.8.0 (personal-testing alpha).** The visual screenshot and tap features are source-only and have not been built or device-tested yet. The checked-in APK remains the previous 0.5.0 build until a batched build and validation. Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
+
+## v0.8.0 candidate: visual tap from a fresh screenshot
+
+When `read_screen` cannot expose a custom control, the Agent can request `capture_screen`, inspect the returned image and request `tap_screen` with x/y pixel coordinates and the exact `screenshotId` from that capture. Android asks for a separate native confirmation for every tap, even in automatic-navigation mode. Each token is one-use, expires after 20 seconds, and is rejected if the package, window ID or window bounds change. Coordinates are mapped from image pixels to screen coordinates and must land inside the active app window; on Android 11–13 the screenshot itself is the display, but the tap remains restricted to the app window. Obvious send/delete/payment/authorization labels are rejected heuristically. Only one short tap is supported—no drag, swipe, long-press or tap chains. After a tap, the Agent must obtain a fresh screen read/capture. **This source candidate has not been built or tested on a phone.**
 
 ## Documentation / agent onboarding
 
@@ -13,9 +17,21 @@ Start with [`AGENTS.md`](AGENTS.md), then:
 - [Next-agent handoff and open issues](docs/HANDOFF.md)
 - [Changelog](CHANGELOG.md)
 
-Latest personal-testing APK: [`dist/pocket-code-debug.apk`](dist/pocket-code-debug.apk). Install over the previous version without uninstalling to retain data. Source does not include credentials or the original private signing key. A fresh clone/CI debug build may not upgrade the installed APK because its signer differs.
+Checked-in personal-testing APK: [`dist/pocket-code-debug.apk`](dist/pocket-code-debug.apk) (v0.5.0). A prior v0.6.0 CI candidate is available as the `pocket-code-debug-apk` artifact in [workflow run 42788994845](https://github.com/mahdimalvandi/pocketCode/actions/runs/42788994845); it does not include the newer visual-tap source. A CI debug build may not upgrade a locally signed APK because its signer differs; back up app data and credentials before uninstalling/reinstalling. Source does not include credentials or the original private signing key.
 
 The sections below are chronological release notes. **Newer sections supersede older feature/permission descriptions.** Native microphone, Telegram and other cross-app behavior still need physical-device testing. No license has been selected by the owner yet.
+
+## v0.6 candidate: Pocket Code wake phrase → Gemini → Agent
+
+Enable **بیدارباش صوتی Pocket Code** in **دسترسی‌ها** and approve the native disclosure. Grant microphone permission if Android asks. On Android 12+ with an installed offline Persian speech model, the app listens for **“Pocket Code”** or **“پاکت کد”** using Android's on-device speech recognizer. A beep means it heard the phrase; speak the command after the beep. The recorder ends after about 1.6 seconds of silence (maximum 30 seconds), sends the WAV to the configured Gemini model through 9Router, and automatically submits the resulting transcript to the existing agent loop. Native confirmations for file changes and sensitive phone actions remain in force.
+
+This is deliberately **foreground-only**: listening stops when Pocket Code is paused, sent to the background or closed, and resumes when the app returns. It is not an always-on hotword service. Wake detection stays on-device; only the command recorded after the beep goes to 9Router/upstream provider. The device must support Android's on-device recognizer and have an offline Persian model installed; there is no online wake-word fallback. The old manual microphone flow remains available and still requires the user to review and send its transcript.
+
+The v0.6.0 candidate has passed CI compilation, 17 JVM tests, Android Lint, APK signature/metadata checks and archive integrity validation. It is not yet verified on a physical Android device; microphone behavior, offline Persian recognition, Gemini transcription and end-to-end Agent submission remain untested.
+
+## v0.7 candidate: visual screen understanding
+
+The Agent can request `capture_screen` when Accessibility text is insufficient. Every capture requires native approval, including in automatic-navigation mode. Android 14+ captures the active app window; Android 11–13 capture the display. The compressed JPEG is sent through 9Router and held in memory only for the current Agent run; it is not saved to chat history or disk. Known sensitive/system/financial packages are blocked by heuristics, which are not exhaustive.
 
 ## v0.5: automatic navigation, ancestor clicks and Gemini dictation
 
@@ -52,7 +68,7 @@ Install the new APK over the old version to preserve settings. Open **دسترس
 3. For app interaction, review the disclosure and manually enable **Pocket Code** in Android Accessibility settings. Accessibility is powerful; only enable if you accept the risks. Disable it after use.
 4. Ask to open a non-sensitive app, read visible text, click a named control, type into a non-password field or scroll. Every screen read/action has a native accessibility-overlay approval. The assistant cannot authorize itself. Keep Pocket Code running; it is not a background/foreground-service automation engine and Android can terminate it.
 
-Only the first tool call of a model turn executes; additional calls are rejected so the model must request a fresh step. Element IDs expire after actions; app identity and element fingerprint are rechecked. No coordinate gestures, screenshots, shell, root, package installation, automatic system permission grants or passive event logging. Known system/security/financial package names and password nodes are blocked. **This is a heuristic, not a guarantee of detecting every sensitive screen or every FLAG_SECURE window.** Approved visible text may contain personal information and goes through 9Router to the model provider. Never use on banking, authentication or private screens.
+Only the first tool call of a model turn executes; additional calls are rejected so the model must request a fresh step. Element IDs expire after actions; app identity and element fingerprint are rechecked. No coordinate gestures, shell, root, package installation, automatic system permission grants or passive event logging. On-demand screenshot capture is a separate, per-request approved visual fallback; it does not add coordinate clicks. Known system/security/financial package names and password nodes are blocked. **This is a heuristic, not a guarantee of detecting every sensitive screen or every FLAG_SECURE window.** Approved visible text may contain personal information and goes through 9Router to the model provider. Never use on banking, authentication or private screens.
 
 Native confirmations also protect app-private writes/deletes. Existing UI confirmations may appear in addition to native prompts. File lists/reads also ask separately, following the request for confirmation on every operation. Opening an imported file from the shared browser currently loads a copy into the private-workspace editor; editing the original is performed through the explicit `write_phone_file` tool and native approval.
 

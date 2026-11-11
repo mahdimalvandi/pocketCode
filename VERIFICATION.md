@@ -1,5 +1,60 @@
 # Verification log
 
+## v0.10.0 candidate / task planning and memory
+
+- Added a WebView-local task-plan module with bounded 2–10 step plans, stable step IDs, sanitized goal/title/note lengths, ordered step progression and terminal completion checks.
+- Added `set_task_plan`, `update_task_step`, `resume_task`, `clear_task_plan` and `finish_task` local tools. The model is instructed to plan only genuinely multi-step requests and update progress after verifying outcomes.
+- The plan is stored in the active chat session's localStorage record and rendered in a progress panel. The user can clear the plan for that session. No screenshot, raw tool response or file content is stored in task memory.
+- An unfinished active plan is paused when the prior run was interrupted. Resuming requires an explicit continuation intent, a fresh `read_screen` or approved `capture_screen`, and `resume_task`; phone/file operations are rejected before resume. Failed/approval-blocked earlier steps cannot be skipped automatically.
+- Future model requests omit prior-turn tool-call payloads and retain only the latest eight plain user/assistant text messages, the current run's full tool history, and a compact task-memory snapshot. `clear_task_plan` discards unrelated paused metadata without touching phone data. Session display/history remains unchanged.
+- Added Node tests for plan bounds, status transitions, ordered steps, safe pause/resume, blocking of approval-required steps, restoration and compact summaries.
+- **Not built or executed in this task, by request.** No GitHub Actions workflow was dispatched. JS syntax, tests, APK and real-device execution remain pending the next batched validation.
+- **Requires later checks:** run Node syntax/tests; verify plan tool compatibility with the selected 9Router model; render progress on mobile/desktop and session switching; test pause/resume after app process death, denied/stale readback, new task replacing an old plan, plan clear and the 24-turn budget. Confirm old tool payloads do not leak into a resumed request and current-run tool-call/result pairs stay valid.
+
+## v0.9.0 candidate / action verification and recovery
+
+- Added `agent-reliability.js` as a pure policy module shared by the WebView runtime and Node's built-in test runner.
+- Every UI-changing action now creates an action-ID checkpoint with its expected outcome and native API acceptance state. The Agent cannot take another UI action or return a final answer until it obtains a fresh Accessibility screen read or approved screenshot. The observation is attached to the matching tool result for model comparison.
+- A native `ok=true` is treated only as request acceptance, not proof that the intended UI state occurred. Typed text is omitted from the verification summary.
+- Added conservative recovery categories for user denial, blocked target, missing permission, stale UI, unavailable target, transient failure and unknown outcome. Only transient failures from idempotent broad-storage reads may be retried once. UI actions and file mutations are never automatically replayed.
+- Denied/blocked verification cannot be bypassed with another UI action. If an observation is denied or fails twice, the action is marked unverified and the same action is not automatically repeated.
+- Added ten Node tests covering action classification, observation gating, sensitive-text omission, denials, stale IDs, ambiguous side effects, safe-read retry eligibility and blocked-action bypass.
+- **Not built and not executed in this task, by request.** No GitHub Actions workflow was dispatched. JS syntax and Node tests remain pending the next batched validation.
+- **Requires later checks:** node syntax and tests; mock a multi-step action→readback flow; test premature final response prevention, denial, blocked target, stale IDs, unavailable screen, model ignoring the checkpoint, stop behavior and router/native errors. Confirm that fresh evidence contradicting the expected outcome is not described as success.
+
+## v0.8.0 candidate / one-shot visual tap
+
+- Added `tap_screen` through Android `AccessibilityService.dispatchGesture`, with `canPerformGestures=true` in the service metadata.
+- Every tap requires fresh native approval, even in automatic-navigation mode. It requires the exact `screenshotId` from the current `capture_screen`, expires after 20 seconds, is consumed before dispatch, and is bound to the same active package/window/bounds. Image-pixel coordinates are converted to display/window coordinates and rejected outside the app window.
+- Obvious English/Persian labels for send, submit, delete, payment, transfer, authentication, permissions and similar effects are blocked heuristically. This list is incomplete and does not replace user review.
+- Added eight JVM unit tests for coordinate mapping, display-to-window clipping, invalid dimensions and sensitive label handling.
+- **Not built or tested in this task, by request.** GitHub Actions remains manual-only; no workflow was dispatched.
+- **Requires later batch verification:** JS syntax, Android compile/lint/package, test suite, real-device gesture support and coordinate accuracy at different DPIs/rotations, app-switch/layout-change/expiry handling, denial/cancellation, custom controls and actual post-tap verification. Verify that gesture dispatch does not interrupt other active gestures unexpectedly.
+
+## v0.7.0 candidate / visual screen understanding
+
+- Implemented `capture_screen` through Android AccessibilityService screenshot APIs (Android 11+); Android 14+ uses active-window capture, Android 11–13 use display capture.
+- The tool is always protected by a fresh native approval, even when automatic navigation is enabled. It checks the active package before approval and again before capture, rejects known blocked packages, limits image dimensions and JPEG size, and returns Base64 only in memory.
+- JavaScript attaches the image as OpenAI-compatible `image_url` content during the current Agent run. Base64 is stripped from the tool result and never added to persisted `session.contents` or localStorage. No coordinate actions were added.
+- **Not built or tested in this task, by request.** GitHub Actions remains manual-only; no workflow was dispatched.
+- **Requires later batch verification:** JS syntax, Android compile/lint/package, screenshot API capability on Android 11–15, capture denial and app-switch race, FLAG_SECURE/blocked-package handling, no local persistence, 9Router model image compatibility and actual visual reasoning on a physical device.
+
+## v0.6 candidate / foreground wake phrase
+
+- Added an opt-in, foreground-only wake phrase using Android 12+ `SpeechRecognizer.createOnDeviceSpeechRecognizer`; no cloud speech-recognition fallback is used for the wake phrase.
+- Wake aliases: “Pocket Code”, “پاکت کد” and common Persian spacing/orthographic variants. After a beep, command capture ends after approximately 1.6 seconds of trailing silence or at 30 seconds.
+- Post-wake WAV is transcribed through the already-configured Gemini model / 9Router endpoint and its transcript is submitted through the existing agent loop. Existing native file-mutation and sensitive-action approvals are unchanged.
+- Manual microphone dictation remains review-before-send.
+- Added JVM unit tests for English/Persian wake-phrase normalization, false-positive rejection, signed PCM RMS calculation, the voice-activity threshold, trailing-silence timer boundaries/resets, WAV metadata and sample payload. CI now runs these tests, Android lint, JavaScript syntax validation and the debug APK build.
+- Added a generation guard so wake transcription is cancelled when the app is paused/destroyed or wake mode is disabled; a result is not forwarded to the Agent after the foreground session is invalidated.
+- **Still requires a physical device:** install/launch, recognizer language availability, real Persian wake phrase precision, mic handoff, actual AudioRecord silence detection, 9Router/Gemini audio transcription and end-to-end Agent submission.
+- Final GitHub Actions PR run 51 on commit `8741d86345a5a57d2dd006616336655494b9f4ca` passed: `node --check`, all 17 JVM tests (0 failures/errors/skips), `lintDebug`, `assembleDebug`, APK signature verification, package/version metadata check and ZIP integrity check.
+- Android Lint reports 13 non-blocking warnings: broad shared-storage permission policy, eight synchronous `SharedPreferences.commit()` calls, target-SDK freshness, WebView JavaScript enablement, missing data-extraction rules and missing application icon. No Lint errors remain.
+- Candidate debug APK was uploaded as the `pocket-code-debug-apk` workflow artifact for run [42788994845](https://github.com/mahdimalvandi/pocketCode/actions/runs/42788994845). The checked-in `dist/pocket-code-debug.apk` is still v0.5.0; use the CI artifact for the v0.6.0 wake-word candidate.
+- **Still requires a physical device:** install/launch, recognizer language availability, real Persian wake phrase precision, mic handoff, actual AudioRecord silence detection, 9Router/Gemini audio transcription and end-to-end Agent submission.
+
+# Verification log
+
 ## v0.5 / navigation and audio
 
 - Added opt-in automatic navigation with stop control; mutation confirmations retained. Native sensitive-click detection is heuristic, supplemented by tool sensitivity metadata, not a guarantee.
