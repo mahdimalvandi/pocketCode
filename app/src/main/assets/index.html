@@ -11,6 +11,7 @@
   <script src="agent-reliability.js" defer></script>
   <script src="agent-task-memory.js" defer></script>
   <script src="agent-tool-batching.js" defer></script>
+  <script src="agent-execution-timeline.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -28,6 +29,10 @@
       <ol id="task-steps" class="task-steps"></ol>
       <div class="task-panel-footer"><span id="task-status"></span><button id="task-clear" type="button">پاک‌کردن برنامه</button></div>
     </section>
+    <details id="timeline-panel" class="timeline-panel">
+      <summary><span class="timeline-kicker">EXECUTION TIMELINE</span><span id="timeline-count">۰ عملیات</span></summary>
+      <ol id="timeline-events" class="timeline-events"><li class="timeline-empty">هنوز ابزار یا عملیات اجرایی ثبت نشده است.</li></ol>
+    </details>
     <section class="welcome" id="welcome">
       <div class="terminal-mark" dir="ltr">[<span>p</span>_]</div>
       <div class="eyebrow" dir="ltr">YOUR PHONE. YOUR WORKSPACE.</div>
@@ -52,7 +57,7 @@
         <div class="composer-end"><button class="icon-button mic" id="voice-button" aria-label="ورودی صوتی">♩</button><button class="send-button" id="send-button" aria-label="ارسال پیام">↑</button></div>
       </div>
     </div>
-    <div class="composer-caption"><span id="connection-label">فایل اتصال 9Router را وارد کن</span><span dir="ltr">BUILD · v0.11</span></div>
+    <div class="composer-caption"><span id="connection-label">فایل اتصال 9Router را وارد کن</span><span dir="ltr">BUILD · v0.12</span></div>
   </footer>
   <nav class="bottom-nav" aria-label="بخش‌های برنامه">
     <button class="active" id="chat-tab"><span>▤</span>گفتگو</button><button id="files-tab"><span>▱</span>فایل‌ها</button><button id="access-tab"><span>⌘</span>دسترسی‌ها</button><button id="settings-tab"><span>⚙</span>تنظیمات</button>

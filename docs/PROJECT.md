@@ -4,7 +4,7 @@
 Pocket Code is a personal Android coding/phone assistant inspired by OpenCode's quiet dark interface. Tools run on the phone. AI inference runs remotely through an existing 9Router endpoint. It is not an official OpenCode client or a full port.
 
 ## Current release
-0.11.0 source candidate, code 11; Android 8+ (minSdk 26), compile/target SDK 35; SDK-only Java native host and bundled Persian RTL web interface. The checked-in `dist/pocket-code-debug.apk` remains the older 0.5.0 build until the next batched build and verification.
+0.12.0 source candidate, code 12; Android 8+ (minSdk 26), compile/target SDK 35; SDK-only Java native host and bundled Persian RTL web interface. The checked-in `dist/pocket-code-debug.apk` remains the older 0.5.0 build until the next batched build and verification.
 
 ## User requirements and implemented behavior
 | Area | Current behavior |
@@ -24,6 +24,10 @@ Every UI-changing tool action creates a verification checkpoint. The runtime req
 
 ## Tool batching
 The Agent can receive up to three independent `phone_storage_roots` / `read_phone_storage` calls in one model response and execute them sequentially through the existing native worker, reducing model round-trips without parallel native actions. Batching is disabled for active/paused task plans, UI verification checkpoints, mixed calls, approval-gated operations and all mutations. Batch file text is capped at 48,000 characters per file and 120,000 characters total; truncation is disclosed. Individual reads retain their existing behavior.
+
+
+## Execution timeline
+Each chat has a collapsible local timeline with at most 100 tool-call events. Entries show a static tool label, local start time, elapsed duration, and a constrained status such as running, awaiting approval, awaiting UI verification, observed, failed, denied or not executed. UI mutations are not marked complete just because Android accepted the API request; the event remains pending until a fresh screen observation is captured. An observation is not a semantic success verdict. The timeline intentionally excludes tool arguments, full paths, file contents, typed strings, screenshots, private model reasoning and raw error text. Data stays in that chat's WebView localStorage session and follows the existing chat-storage limitations.
 
 ## Task planning and memory
 For multi-step requests, the Agent creates a bounded plan before phone/file operations. Each step has a stable ID and one of pending, running, completed, failed or requires-approval states. Paused unrelated plans can be discarded with `clear_task_plan` without affecting device data. Only short operational notes are retained; screenshots, raw tool payloads and file contents are not copied into task memory. The plan persists with its chat session and is visible in a progress panel. If an active task is interrupted, it becomes paused. Continuing requires a clear user request, a fresh screen observation and an explicit resume tool call. Previous-turn tool-call payloads are omitted from future model requests; compact user/assistant dialogue and the structured task snapshot are retained. Simple questions and one-action tasks do not need a plan.
