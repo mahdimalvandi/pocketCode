@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.10.0 (candidate)
+- Added local `set_task_plan`, `update_task_step`, `resume_task`, `clear_task_plan` and `finish_task` tools for multi-step task planning and progress tracking.
+- Added a session-scoped structured task memory (goal, ordered steps, statuses and short operational notes) persisted with the current chat. The model receives a compact snapshot rather than the previous turns' full tool-call history.
+- Added a visible progress panel with per-step state, completion count and a control to clear the plan memory.
+- Interrupted active plans are paused. Resuming requires an explicit user continuation, a fresh screen observation and a `resume_task` call; an unfinished running step is never blindly replayed.
+- Added bounded plan sizes (2–10 steps), sanitized/bounded notes, blocked-step handling and final-response checks for unfinished plans. Added 14 Node tests. Not built or executed in this task.
+
 ## 0.9.0 (candidate)
 - Added a runtime-enforced verification checkpoint after every UI-changing phone action. The Agent must obtain a fresh `read_screen` or approved `capture_screen` observation before another UI action or final answer.
 - Each checkpoint records a per-action ID, expected outcome and whether Android accepted the request. The fresh observation is attached to the matching tool result; typed text is deliberately omitted from verification summaries.

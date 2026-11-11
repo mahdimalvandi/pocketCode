@@ -1,7 +1,7 @@
 # Agent handoff / next work
 
 ## Start here
-Current feature branch snapshot is v0.9.0 source candidate. The 0.6 CI build is historical; the 0.7 screenshot and 0.8 visual-tap additions have not been built or device-tested.
+Current feature branch snapshot is v0.10.0 source candidate. The 0.6 CI build is historical; the 0.7 screenshot and 0.8 visual-tap additions have not been built or device-tested.
 
 ## Delivered and verified
 - APK compiled/signed with the original local personal debug key.
@@ -23,6 +23,13 @@ Current feature branch snapshot is v0.9.0 source candidate. The 0.6 CI build is 
 - Added recovery categories for denial, blocked target, missing permission, stale screen/element, unavailable target, transient and unknown failures. A transient failure may be retried once only for idempotent broad-storage reads. UI actions and writes are never automatically replayed.
 - A denied or blocked readback prevents other UI actions from bypassing the stop. If observation fails twice, the action remains unverified and cannot be repeated with the same tool.
 - Added Node built-in tests for the reliability policy. **Not built or tested in this task; GitHub Actions remains manual-only.**
+
+## Latest candidate: 0.10.0 task planning and memory
+- Added local task tools `set_task_plan`, `update_task_step`, `resume_task`, `clear_task_plan` and `finish_task`. Plans contain 2–10 outcome steps and stable IDs, with bounded status/note fields.
+- The active plan is saved in the current chat session and shown in a compact progress panel. Switching chats restores the matching plan; the user can clear it per chat.
+- A plan left active when a send is interrupted is paused on the next send. Phone/file work is blocked until a fresh screen observation and explicit `resume_task` call. An interrupted running step stays identifiable so it can be inspected before retry.
+- Prior-turn tool-call payloads are trimmed from future model requests; the current run keeps its tool-call pairs and receives a compact task snapshot plus recent user/assistant dialogue.
+- Added Node tests for bounded plan lifecycle, ordered steps and safe resume. **Not built or tested in this task; no GitHub Actions run.**
 
 ## Highest-priority follow-up
 1. **Actual Telegram reproduction:** capture redacted Accessibility tree and error; confirm clickable-ancestor fix. A plausible code defect was fixed, but it is not a confirmed diagnosis. Do not add blind coordinate taps as an easy workaround.

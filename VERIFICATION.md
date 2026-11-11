@@ -1,5 +1,16 @@
 # Verification log
 
+## v0.10.0 candidate / task planning and memory
+
+- Added a WebView-local task-plan module with bounded 2–10 step plans, stable step IDs, sanitized goal/title/note lengths, ordered step progression and terminal completion checks.
+- Added `set_task_plan`, `update_task_step`, `resume_task`, `clear_task_plan` and `finish_task` local tools. The model is instructed to plan only genuinely multi-step requests and update progress after verifying outcomes.
+- The plan is stored in the active chat session's localStorage record and rendered in a progress panel. The user can clear the plan for that session. No screenshot, raw tool response or file content is stored in task memory.
+- An unfinished active plan is paused when the prior run was interrupted. Resuming requires an explicit continuation intent, a fresh `read_screen` or approved `capture_screen`, and `resume_task`; phone/file operations are rejected before resume. Failed/approval-blocked earlier steps cannot be skipped automatically.
+- Future model requests omit prior-turn tool-call payloads and retain only the latest eight plain user/assistant text messages, the current run's full tool history, and a compact task-memory snapshot. `clear_task_plan` discards unrelated paused metadata without touching phone data. Session display/history remains unchanged.
+- Added Node tests for plan bounds, status transitions, ordered steps, safe pause/resume, blocking of approval-required steps, restoration and compact summaries.
+- **Not built or executed in this task, by request.** No GitHub Actions workflow was dispatched. JS syntax, tests, APK and real-device execution remain pending the next batched validation.
+- **Requires later checks:** run Node syntax/tests; verify plan tool compatibility with the selected 9Router model; render progress on mobile/desktop and session switching; test pause/resume after app process death, denied/stale readback, new task replacing an old plan, plan clear and the 24-turn budget. Confirm old tool payloads do not leak into a resumed request and current-run tool-call/result pairs stay valid.
+
 ## v0.9.0 candidate / action verification and recovery
 
 - Added `agent-reliability.js` as a pure policy module shared by the WebView runtime and Node's built-in test runner.

@@ -9,6 +9,7 @@
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="styles.css">
   <script src="agent-reliability.js" defer></script>
+  <script src="agent-task-memory.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -20,6 +21,12 @@
   </header>
   <div class="workspace-bar"><span class="status-dot"></span><span>فضای کاری گوشی</span><span class="workspace-path" dir="ltr">~/workspace</span></div>
   <main id="chat" aria-label="گفتگو" aria-live="polite">
+    <section id="task-panel" class="task-panel" hidden aria-live="polite">
+      <div class="task-panel-heading"><div><span class="task-kicker">TASK PLAN</span><strong id="task-goal"></strong></div><span id="task-progress-count" class="task-progress-count"></span></div>
+      <div class="task-progress-track"><span id="task-progress-fill"></span></div>
+      <ol id="task-steps" class="task-steps"></ol>
+      <div class="task-panel-footer"><span id="task-status"></span><button id="task-clear" type="button">پاک‌کردن برنامه</button></div>
+    </section>
     <section class="welcome" id="welcome">
       <div class="terminal-mark" dir="ltr">[<span>p</span>_]</div>
       <div class="eyebrow" dir="ltr">YOUR PHONE. YOUR WORKSPACE.</div>
@@ -44,7 +51,7 @@
         <div class="composer-end"><button class="icon-button mic" id="voice-button" aria-label="ورودی صوتی">♩</button><button class="send-button" id="send-button" aria-label="ارسال پیام">↑</button></div>
       </div>
     </div>
-    <div class="composer-caption"><span id="connection-label">فایل اتصال 9Router را وارد کن</span><span dir="ltr">BUILD · v0.9</span></div>
+    <div class="composer-caption"><span id="connection-label">فایل اتصال 9Router را وارد کن</span><span dir="ltr">BUILD · v0.10</span></div>
   </footer>
   <nav class="bottom-nav" aria-label="بخش‌های برنامه">
     <button class="active" id="chat-tab"><span>▤</span>گفتگو</button><button id="files-tab"><span>▱</span>فایل‌ها</button><button id="access-tab"><span>⌘</span>دسترسی‌ها</button><button id="settings-tab"><span>⚙</span>تنظیمات</button>
