@@ -4,7 +4,7 @@
 Pocket Code is a personal Android coding/phone assistant inspired by OpenCode's quiet dark interface. Tools run on the phone. AI inference runs remotely through an existing 9Router endpoint. It is not an official OpenCode client or a full port.
 
 ## Current release
-0.10.0 source candidate, code 10; Android 8+ (minSdk 26), compile/target SDK 35; SDK-only Java native host and bundled Persian RTL web interface. The checked-in `dist/pocket-code-debug.apk` remains the older 0.5.0 build until the next batched build and verification.
+0.11.0 source candidate, code 11; Android 8+ (minSdk 26), compile/target SDK 35; SDK-only Java native host and bundled Persian RTL web interface. The checked-in `dist/pocket-code-debug.apk` remains the older 0.5.0 build until the next batched build and verification.
 
 ## User requirements and implemented behavior
 | Area | Current behavior |
@@ -21,6 +21,9 @@ Pocket Code is a personal Android coding/phone assistant inspired by OpenCode's 
 
 ## Agent execution reliability
 Every UI-changing tool action creates a verification checkpoint. The runtime requires a fresh `read_screen` or `capture_screen` observation before another UI action or final response; the model compares that observation with the expected outcome. Android's `ok=true` is treated only as request acceptance. Failures are classified into denial, blocked target, permission, stale UI, unavailable target, transient and unknown categories. Only transient idempotent broad-storage reads may be retried once. UI actions and file mutations are never replayed automatically; ambiguous outcomes must be inspected first. A denied or blocked verification cannot be bypassed by trying a different UI action.
+
+## Tool batching
+The Agent can receive up to three independent `phone_storage_roots` / `read_phone_storage` calls in one model response and execute them sequentially through the existing native worker, reducing model round-trips without parallel native actions. Batching is disabled for active/paused task plans, UI verification checkpoints, mixed calls, approval-gated operations and all mutations. Batch file text is capped at 48,000 characters per file and 120,000 characters total; truncation is disclosed. Individual reads retain their existing behavior.
 
 ## Task planning and memory
 For multi-step requests, the Agent creates a bounded plan before phone/file operations. Each step has a stable ID and one of pending, running, completed, failed or requires-approval states. Paused unrelated plans can be discarded with `clear_task_plan` without affecting device data. Only short operational notes are retained; screenshots, raw tool payloads and file contents are not copied into task memory. The plan persists with its chat session and is visible in a progress panel. If an active task is interrupted, it becomes paused. Continuing requires a clear user request, a fresh screen observation and an explicit resume tool call. Previous-turn tool-call payloads are omitted from future model requests; compact user/assistant dialogue and the structured task snapshot are retained. Simple questions and one-action tasks do not need a plan.

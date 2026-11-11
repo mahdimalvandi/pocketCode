@@ -3,9 +3,10 @@
 `VERIFICATION.md` records actual results per version. This document defines what to verify; checklist items are not claims that tests passed.
 
 ## Automated/local baseline
-- `node --check app/src/main/assets/agent-reliability.js`, `node --check app/src/main/assets/agent-task-memory.js` and `node --check app/src/main/assets/app.js`.
+- `node --check app/src/main/assets/agent-reliability.js`, `node --check app/src/main/assets/agent-task-memory.js`, `node --check app/src/main/assets/agent-tool-batching.js` and `node --check app/src/main/assets/app.js`.
 - `node --test app/src/test/js/agent-reliability.test.js` (verification gating, failure classification and retry safety).
 - `node --test app/src/test/js/agent-task-memory.test.js` (plan validation, bounded/sanitized storage, ordered step transitions, completion checks, blocked steps and explicit resume).
+- `node --test app/src/test/js/agent-tool-batching.test.js` (batch safety classification, bounds, task/verification gating and mixed-call fallback).
 - `gradle testDebugUnitTest` (wake-phrase normalization, PCM RMS threshold, trailing-silence state transitions, WAV header/encoding, visual-tap coordinate mapping and sensitive-label deny-list).
 - `gradle lintDebug` and `gradle assembleDebug`.
 - Verify debug APK with `apksigner`, confirm package/version metadata with `aapt dump badging`, and check ZIP integrity with `unzip -t`.
@@ -24,6 +25,7 @@ With a mock native bridge test:
 - Verify that transient broad-storage read failures retry at most once; never retry taps, clicks, navigation, writes or other side effects automatically. Denied/blocked verification must prevent UI-action bypass.
 - `capture_screen` approval denial must result in zero screenshot upload; approval adds a multimodal data-URL image only to the current `send()` request loop, with no Base64 in session/localStorage/tool-result messages.
 - Visual tap: tool schema carries screenshotId and image-space x/y; no action without the exact current token; token is consumed after one attempt; denied/cancelled taps are not retried; tap forces fresh screen verification and clears the old in-memory image.
+- Tool batching: only previously-consented broad-storage reads are batched; up to three calls; sequential native execution; stable `tool_call_id` mapping; mixed or approval-gated calls fall back to first-only; task-plan and verification checkpoints disable batches; output text budgets and truncation metadata are honored; stop prevents subsequent calls.
 - Task planning/memory: plan only multi-step requests; no plan on simple questions; 2–10 step bounds; generated IDs; pending/running/completed/failed/requires-approval states; progress-panel updates; switching chats restores the matching plan; clear removes only that session's task memory; a paused unrelated plan can be cleared without touching device data.
 - Task resume: an interrupted active plan becomes paused; phone/file tools are blocked until a fresh read_screen/capture_screen and explicit resume_task; ensure the previous running step is observed before any retry; new unrelated tasks replace rather than resume the old plan.
 - Context compaction: previous-turn tool-call payloads are excluded from new requests while the current run keeps valid tool-call/tool-result pairs and the saved plan snapshot.

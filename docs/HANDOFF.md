@@ -1,7 +1,7 @@
 # Agent handoff / next work
 
 ## Start here
-Current feature branch snapshot is v0.10.0 source candidate. The 0.6 CI build is historical; the 0.7 screenshot and 0.8 visual-tap additions have not been built or device-tested.
+Current main snapshot is v0.10.0 source candidate; the next feature branch develops v0.11.0 tool batching. The 0.6 CI build is historical; the 0.7 screenshot and 0.8 visual-tap additions have not been built or device-tested.
 
 ## Delivered and verified
 - APK compiled/signed with the original local personal debug key.
@@ -30,6 +30,12 @@ Current feature branch snapshot is v0.10.0 source candidate. The 0.6 CI build is
 - A plan left active when a send is interrupted is paused on the next send. Phone/file work is blocked until a fresh screen observation and explicit `resume_task` call. An interrupted running step stays identifiable so it can be inspected before retry.
 - Prior-turn tool-call payloads are trimmed from future model requests; the current run keeps its tool-call pairs and receives a compact task snapshot plus recent user/assistant dialogue.
 - Added Node tests for bounded plan lifecycle, ordered steps and safe resume. **Not built or tested in this task; no GitHub Actions run.**
+
+## Next candidate: 0.11.0 tool batching
+- Added a conservative scheduler for up to three independent broad shared-storage reads (`phone_storage_roots`, `read_phone_storage`) from one model response. Calls are executed sequentially on the existing single-threaded Android worker; the benefit is fewer model round-trips, not parallel native I/O.
+- Mixed or non-batchable tool responses keep first-tool-only behavior. Task plans, pending UI verification, stop state, approval-gated operations and mutations disable batching.
+- Batch file text is bounded to 48,000 characters per file and 120,000 characters total. Truncation metadata is returned; single read calls are unchanged.
+- Added scheduler tests; not run. Build/CI remains deferred to the user's final batched test cycle.
 
 ## Highest-priority follow-up
 1. **Actual Telegram reproduction:** capture redacted Accessibility tree and error; confirm clickable-ancestor fix. A plausible code defect was fixed, but it is not a confirmed diagnosis. Do not add blind coordinate taps as an easy workaround.

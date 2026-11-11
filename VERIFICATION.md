@@ -1,5 +1,15 @@
 # Verification log
 
+## v0.11.0 candidate / conservative tool batching
+
+- Added a pure tool-batch scheduler allowing up to three independent, previously-consented broad-storage reads (`phone_storage_roots`, `read_phone_storage`) from one model tool-call response.
+- Tool calls execute sequentially through the existing single-threaded native bridge; no native threading or bridge queue changes were made. The expected gain is fewer model turns, not parallel Android I/O.
+- Batching is disabled when a UI verification checkpoint is pending, a task plan is active/paused, the user has stopped automation, or the response contains any mixed/unsafe/approval-gated/mutating call. In those cases only the first model tool call executes and the others receive explicit not-executed tool results.
+- Batch read text is limited to 48,000 characters per file and 120,000 characters across the batch; truncated results carry original/returned character counts. A normal single `read_phone_storage` call is unchanged.
+- Added Node scheduler tests for safe classification, mixed-call fallback, bounds, stop state and verification/task-plan gating.
+- **Not built or executed in this task, by request.** No GitHub Actions workflow was dispatched. JavaScript syntax, scheduler tests, Android build and physical-device testing remain pending the next combined test cycle.
+- **Requires later checks:** test multiple read calls and stable `tool_call_id` mapping against a mocked 9Router response; confirm exactly one bridge read per call and sequential ordering; test two/three/four calls, mixed safe+unsafe calls, malformed args, denial/permission errors, task/verification gates, stop mid-batch, 48k/120k truncation, 4 MB HTTP request bound and context-token cost. Confirm the model retries truncated/overflow reads as individual calls only when needed.
+
 ## v0.10.0 candidate / task planning and memory
 
 - Added a WebView-local task-plan module with bounded 2–10 step plans, stable step IDs, sanitized goal/title/note lengths, ordered step progression and terminal completion checks.

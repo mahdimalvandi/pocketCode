@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.11.0 (candidate)
+- Added a conservative tool-call scheduler: up to three independent, previously-consented broad shared-storage reads (`phone_storage_roots`, `read_phone_storage`) from one model response may execute in a single model turn.
+- Batch calls are executed sequentially through the existing single-threaded native bridge; no parallel Android operation queue or new native permissions were added.
+- Batching is disabled during active/paused task plans, pending UI verification, stop state, mixed/approval-gated calls and all UI/file mutation operations. Unsafe mixed responses execute only the first tool; deferred calls receive explicit tool errors.
+- Batch text outputs are capped at 48,000 characters per file and 120,000 characters total; truncation is explicitly marked. Individual read calls remain unchanged.
+- Added a pure scheduler module and Node tests. Not built or executed in this task.
+
 ## 0.10.0 (candidate)
 - Added local `set_task_plan`, `update_task_step`, `resume_task`, `clear_task_plan` and `finish_task` tools for multi-step task planning and progress tracking.
 - Added a session-scoped structured task memory (goal, ordered steps, statuses and short operational notes) persisted with the current chat. The model receives a compact snapshot rather than the previous turns' full tool-call history.
