@@ -343,7 +343,7 @@ public final class PhoneAccessService extends AccessibilityService {
         latestScreenshot=null;
         Path path=new Path();
         path.moveTo(screenX,screenY);
-        path.lineTo(screenX+0.1f,screenY+0.1f);
+        path.lineTo(screenX,screenY);
         GestureDescription gesture=new GestureDescription.Builder()
                 .addStroke(new GestureDescription.StrokeDescription(path,0,90))
                 .build();
