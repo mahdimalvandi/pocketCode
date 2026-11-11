@@ -3,10 +3,11 @@
 `VERIFICATION.md` records actual results per version. This document defines what to verify; checklist items are not claims that tests passed.
 
 ## Automated/local baseline
-- `node --check app/src/main/assets/agent-reliability.js`, `node --check app/src/main/assets/agent-task-memory.js`, `node --check app/src/main/assets/agent-tool-batching.js` and `node --check app/src/main/assets/app.js`.
+- `node --check app/src/main/assets/agent-reliability.js`, `node --check app/src/main/assets/agent-task-memory.js`, `node --check app/src/main/assets/agent-tool-batching.js`, `node --check app/src/main/assets/agent-execution-timeline.js` and `node --check app/src/main/assets/app.js`.
 - `node --test app/src/test/js/agent-reliability.test.js` (verification gating, failure classification and retry safety).
 - `node --test app/src/test/js/agent-task-memory.test.js` (plan validation, bounded/sanitized storage, ordered step transitions, completion checks, blocked steps and explicit resume).
 - `node --test app/src/test/js/agent-tool-batching.test.js` (batch safety classification, bounds, task/verification gating and mixed-call fallback).
+- `node --test app/src/test/js/agent-execution-timeline.test.js` (event bounds, persistence sanitization, duration/status transitions, approval states, UI-verification states and failure classification).
 - `gradle testDebugUnitTest` (wake-phrase normalization, PCM RMS threshold, trailing-silence state transitions, WAV header/encoding, visual-tap coordinate mapping and sensitive-label deny-list).
 - `gradle lintDebug` and `gradle assembleDebug`.
 - Verify debug APK with `apksigner`, confirm package/version metadata with `aapt dump badging`, and check ZIP integrity with `unzip -t`.
@@ -33,6 +34,14 @@ With a mock native bridge test:
 - Storage-root navigation, paginated listing, UTF-8 display and consent revocation.
 - Voice start/stop/cancel/error; disabled states; transcript insertion; absolutely no automatic chat submission.
 - Empty transcript and reopened recording dialog; permission denied and router failure messages.
+
+
+Execution timeline mock checks:
+- Verify one event is created for every executed tool call, including local task tools and each member of a permitted batch; deferred calls are clearly marked not_executed.
+- Verify event state changes to awaiting_approval during the in-app file confirmation, returns to running after approval, and ends denied/failed/completed as appropriate.
+- UI-changing actions remain awaiting_verification after Android accepts the request; a fresh read_screen/capture_screen changes the matching action event to observed, while denied/missing observations produce unverified. Never label observed as successful completion.
+- Switch chats, create a new chat and restore persisted history. Verify a maximum of 100 events per chat, safe handling of malformed localStorage data and no cross-session mixing.
+- Inspect localStorage payloads: no tool args, full paths, contents, typed strings, screenshots, chat text, model reasoning or raw error strings may appear in timeline records. Confirm DOM renders all fields via textContent.
 
 ## Physical-device matrix (still required)
 | Area | Cases |

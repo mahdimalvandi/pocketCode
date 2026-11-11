@@ -1,4 +1,11 @@
-# Verification log
+## v0.12.0 candidate / execution timeline
+
+- Added a per-chat collapsible execution history capped at 100 events. It tracks tool labels, local timestamps, elapsed duration and constrained operation states. Tool calls inside permitted read batches are recorded individually, as are deferred calls.
+- Added explicit in-app file approval states. UI-changing actions remain awaiting verification after the native request returns; only a fresh read_screen/capture_screen changes the matching action to observed. This is not a semantic success assertion.
+- Timeline data intentionally excludes arguments, paths, file content, typed text, screenshots, chat messages, model reasoning and raw error payloads. Persisted event structures are restored through an allowlist and are displayed through textContent.
+- Added the pure module and tests for 100-event bounds, metadata sanitization, state transitions, durations, approval, verification and errors.
+- **Not run, not built and not device-tested by request.** No GitHub Actions workflow was dispatched. JavaScript syntax, Node tests, Chrome visual/interaction checks, Android lint/build and physical-device validation remain pending the combined final test cycle.
+- **Requires later checks:** mock a native approval while a tool is pending; verify event mapping for batched and deferred calls; stop during a UI verification checkpoint; simulate denied readback and app interruption; switch/create/restore chats; confirm old sessions restore safely; inspect localStorage for sensitive-data absence; verify that observed never implies semantic success.
 
 ## v0.11.0 candidate / conservative tool batching
 
