@@ -5,12 +5,15 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
+import android.graphics.Path;
 import android.hardware.HardwareBuffer;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Base64;
+import android.util.DisplayMetrics;
 import android.view.Display;
+import android.accessibilityservice.GestureDescription;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -19,6 +22,7 @@ import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /** No passive recording. Automatic navigation is opt-in; sensitive actions still prompt. */
 public final class PhoneAccessService extends AccessibilityService {
@@ -30,6 +34,26 @@ public final class PhoneAccessService extends AccessibilityService {
     private AlertDialog approval;
     private Reply waiting;
     private String snapshotPackage = "";
+    private static final long SCREENSHOT_TTL_MS = 20_000L;
+    private ScreenshotSession latestScreenshot;
+
+    private static final class ScreenshotSession {
+        final String id;
+        final String packageName;
+        final int windowId;
+        final int imageWidth;
+        final int imageHeight;
+        final Rect coordinateBounds;
+        final Rect allowedBounds;
+        final long capturedAt;
+        ScreenshotSession(String id, String packageName, int windowId, int imageWidth, int imageHeight,
+                          Rect coordinateBounds, Rect allowedBounds, long capturedAt) {
+            this.id=id; this.packageName=packageName; this.windowId=windowId;
+            this.imageWidth=imageWidth; this.imageHeight=imageHeight;
+            this.coordinateBounds=new Rect(coordinateBounds); this.allowedBounds=new Rect(allowedBounds);
+            this.capturedAt=capturedAt;
+        }
+    }
     private boolean automatic() { return getSharedPreferences("secure_settings",MODE_PRIVATE).getBoolean("automaticNavigation",false); }
     private String label(AccessibilityNodeInfo n) {
         return (String.valueOf(n.getText())+" "+String.valueOf(n.getContentDescription())+" "+String.valueOf(n.getViewIdResourceName())).toLowerCase(java.util.Locale.ROOT);
@@ -49,8 +73,9 @@ public final class PhoneAccessService extends AccessibilityService {
         current.recycle();return null;
     }
     public void stopAutomation() {
-        main.post(()->{if(approval!=null)approval.dismiss();finish(null,"Automation stopped by user.");clearNodes();snapshotPackage="";});
+        main.post(()->{if(approval!=null)approval.dismiss();latestScreenshot=null;finish(null,"Automation stopped by user.");clearNodes();snapshotPackage="";});
     }
+    public void invalidateScreenshot() { main.post(() -> latestScreenshot=null); }
     public static PhoneAccessService current() { return instance; }
     @Override protected void onServiceConnected() { instance = this; }
     @Override public void onAccessibilityEvent(AccessibilityEvent event) { /* Deliberately do not collect events. */ }
@@ -59,7 +84,7 @@ public final class PhoneAccessService extends AccessibilityService {
         instance = null;
         if (approval != null) approval.dismiss();
         if (waiting != null) waiting.done(null, "Accessibility service stopped.");
-        waiting = null; clearNodes(); super.onDestroy();
+        waiting = null; latestScreenshot=null; clearNodes(); super.onDestroy();
     }
     private void clearNodes() { for (AccessibilityNodeInfo n : nodes.values()) n.recycle(); nodes.clear(); }
     private boolean blocked(String pkg) {
@@ -79,24 +104,49 @@ public final class PhoneAccessService extends AccessibilityService {
     public void request(String action, JSONObject payload, Reply reply) {
         main.post(() -> {
             if (waiting != null) { reply.done(null, "Another approval is pending."); return; }
+            if (!action.equals("capture_screen") && !action.equals("tap_screen")) latestScreenshot=null;
             waiting = reply;
             String detail = action + "\n" + payload.toString();
             String requestedPackage = "";
+            int requestedWindowId = -1;
+            Rect requestedBounds = new Rect();
             AccessibilityNodeInfo visible=getRootInActiveWindow();
-            if(visible!=null){requestedPackage=String.valueOf(visible.getPackageName());detail+="\nCurrent app: "+requestedPackage;visible.recycle();}
+            if(visible!=null){
+                requestedPackage=String.valueOf(visible.getPackageName());
+                requestedWindowId=visible.getWindowId(); visible.getBoundsInScreen(requestedBounds);
+                detail+="\nCurrent app: "+requestedPackage; visible.recycle();
+            }
             final String screenshotPackage = requestedPackage;
+            final int screenshotWindowId = requestedWindowId;
+            final Rect screenshotBounds = new Rect(requestedBounds);
             if (action.equals("capture_screen") && (Build.VERSION.SDK_INT < Build.VERSION_CODES.R
-                    || screenshotPackage.isEmpty() || blocked(screenshotPackage))) {
+                    || screenshotPackage.isEmpty() || blocked(screenshotPackage) || screenshotBounds.isEmpty())) {
                 finish(null,"Screenshot capture is unavailable for this screen or Android version."); return;
             }
-            if (!action.equals("read_screen") && !action.equals("phone_back") && !action.equals("capture_screen")) {
+            double tapX=Double.NaN, tapY=Double.NaN;
+            if(action.equals("tap_screen")) {
+                ScreenshotSession shot=latestScreenshot;
+                tapX=payload.optDouble("x",Double.NaN); tapY=payload.optDouble("y",Double.NaN);
+                String reason=payload.optString("reason","").trim();
+                boolean valid=shot!=null && !shot.id.isEmpty()
+                        && android.os.SystemClock.elapsedRealtime()-shot.capturedAt<=SCREENSHOT_TTL_MS
+                        && shot.packageName.equals(screenshotPackage) && shot.windowId==requestedWindowId
+                        && !blocked(screenshotPackage) && Double.isFinite(tapX) && Double.isFinite(tapY)
+                        && tapX>=0 && tapY>=0 && tapX<shot.imageWidth && tapY<shot.imageHeight
+                        && !reason.isEmpty() && reason.length()<=180
+                        && shot.id.equals(payload.optString("screenshotId",""));
+                if(!valid){latestScreenshot=null;finish(null,"Screenshot is missing, expired, from another screen, or the coordinates/reason are invalid. Capture the current screen again.");return;}
+                detail += "\nRequested target: " + reason + "\nScreenshot coordinate: (" + tapX + ", " + tapY + ")"
+                        + " of " + shot.imageWidth + "×" + shot.imageHeight;
+            }
+            if (!action.equals("read_screen") && !action.equals("phone_back") && !action.equals("capture_screen") && !action.equals("tap_screen")) {
                 AccessibilityNodeInfo target=nodes.get(payload.optString("elementId"));
                 if(target==null){waiting=null;reply.done(null,"Read the target screen first; element ID expired.");return;}
                 detail += "\nApp: " + snapshotPackage + "\nTarget: " + String.valueOf(target.getText()) + "\n" + String.valueOf(target.getContentDescription());
             }
             if (detail.length() > 4000) { waiting = null; reply.done(null, "Action is too large."); return; }
-            // Screen images always require a fresh native approval, even in automatic-navigation mode.
-            boolean needsApproval=action.equals("capture_screen") || !automatic();
+            // Screenshot capture and visual taps always require a fresh native approval, even in automatic mode.
+            boolean needsApproval=action.equals("capture_screen") || action.equals("tap_screen") || !automatic();
             if(action.equals("click_element")){
                 AccessibilityNodeInfo source=nodes.get(payload.optString("elementId"));
                 AccessibilityNodeInfo target=source==null?null:clickTarget(source);
@@ -113,10 +163,12 @@ public final class PhoneAccessService extends AccessibilityService {
             }
             String disclosure = action.equals("capture_screen")
                     ? "با تأیید، تصویر فعلی صفحه به‌صورت JPEG از طریق 9Router به مدل انتخاب‌شده ارسال می‌شود. تصویر فقط برای همین اجرای Agent در حافظه نگه داشته می‌شود و در تاریخچهٔ ذخیره‌شده یا فایل گوشی ذخیره نمی‌شود. ممکن است اعلان‌ها یا اطلاعات خصوصی قابل مشاهده در تصویر باشند؛ صفحه‌های حساس را ثبت نکن."
+                    : action.equals("tap_screen")
+                    ? "با تأیید، فقط یک لمس در مختصات نمایش‌داده‌شده روی همین صفحه اجرا می‌شود. این لمس ممکن است اثر واقعی داشته باشد. شناسهٔ تصویر یک‌بارمصرف و کوتاه‌عمر است؛ صفحهٔ فعلی باید با تصویر یکی باشد. برای ارسال، حذف، پرداخت یا هر اقدام حساس از این ابزار استفاده نکن."
                     : "خواندن صفحه، متن قابل مشاهده را از طریق 9Router به مدل می‌فرستد. کلیک می‌تواند اثر واقعی داشته باشد. فقط اگر این مرحله را می‌خواهید تأیید کنید.";
             approval = new AlertDialog.Builder(this).setTitle("Pocket Code · اجازهٔ این مرحله")
                 .setMessage(detail + "\n\n" + disclosure)
-                .setNegativeButton("رد کردن", (d,w) -> finish(null,"User denied this phone action."))
+                .setNegativeButton("رد کردن", (d,w) -> { if(action.equals("tap_screen"))latestScreenshot=null; finish(null,"User denied this phone action."); })
                 .setPositiveButton("فقط همین مرحله", (d,w) -> {
                     approval = null;
                     final boolean autoAtApproval=automatic();
@@ -125,13 +177,14 @@ public final class PhoneAccessService extends AccessibilityService {
                         if(waiting!=reply)return;
                         try {
                             if(autoAtApproval&&!automatic())throw new Exception("Automation stopped.");
-                            if(action.equals("capture_screen")){captureScreenshot(screenshotPackage);return;}
+                            if(action.equals("capture_screen")){captureScreenshot(screenshotPackage,screenshotWindowId,screenshotBounds);return;}
+                            if(action.equals("tap_screen")){performApprovedTap(payload);return;}
                             finish(execute(action,payload,true),null);
                         } catch (Exception e) { finish(null,e.getMessage()); }
                     }, 350);
                 }).create();
             approval.setCanceledOnTouchOutside(false);
-            approval.setOnCancelListener(d -> finish(null,"User cancelled this phone action."));
+            approval.setOnCancelListener(d -> { if(action.equals("tap_screen"))latestScreenshot=null; finish(null,"User cancelled this phone action."); });
             approval.getWindow().setType(WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY);
             approval.getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
             try { approval.show(); }
@@ -139,7 +192,7 @@ public final class PhoneAccessService extends AccessibilityService {
         });
     }
     /** Captures only after a per-request native approval. The image is returned in memory, never written to storage. */
-    private void captureScreenshot(String expectedPackage) {
+    private void captureScreenshot(String expectedPackage, int expectedWindowId, Rect expectedBounds) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
             finish(null, "Screen image capture requires Android 11 or newer.");
             return;
@@ -151,8 +204,10 @@ public final class PhoneAccessService extends AccessibilityService {
         }
         String currentPackage = String.valueOf(root.getPackageName());
         int windowId = root.getWindowId();
+        Rect activeBounds = new Rect(); root.getBoundsInScreen(activeBounds);
         root.recycle();
-        if (!currentPackage.equals(expectedPackage) || blocked(currentPackage)) {
+        if (!currentPackage.equals(expectedPackage) || windowId!=expectedWindowId
+                || !activeBounds.equals(expectedBounds) || blocked(currentPackage)) {
             finish(null, "The active app changed or is blocked. No screenshot was sent.");
             return;
         }
@@ -200,10 +255,25 @@ public final class PhoneAccessService extends AccessibilityService {
                     }
                     if (jpeg.size() > 1_200_000)
                         throw new Exception("The screenshot is too large to send safely.");
+                    Rect coordinateBounds;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                        coordinateBounds = new Rect(activeBounds);
+                    } else {
+                        Display display = getDisplay();
+                        if (display == null) throw new Exception("The active display is unavailable.");
+                        DisplayMetrics metrics = new DisplayMetrics(); display.getRealMetrics(metrics);
+                        coordinateBounds = new Rect(0, 0, metrics.widthPixels, metrics.heightPixels);
+                    }
+                    String screenshotId = UUID.randomUUID().toString();
+                    latestScreenshot = new ScreenshotSession(screenshotId, currentPackage, windowId,
+                            scaled.getWidth(), scaled.getHeight(), coordinateBounds, activeBounds,
+                            android.os.SystemClock.elapsedRealtime());
                     JSONObject result = new JSONObject()
                             .put("package", currentPackage)
+                            .put("screenshotId", screenshotId)
                             .put("width", scaled.getWidth())
                             .put("height", scaled.getHeight())
+                            .put("coordinateSpace", "image_pixels_top_left_origin")
                             .put("mimeType", "image/jpeg")
                             .put("data", Base64.encodeToString(jpeg.toByteArray(), Base64.NO_WRAP));
                     finish(result, null);
@@ -230,6 +300,66 @@ public final class PhoneAccessService extends AccessibilityService {
         } catch (Exception e) {
             finish(null, "Android could not capture this screen.");
         }
+    }
+
+    /** A one-shot tap tied to the exact, recently captured screenshot and active app window. */
+    private void performApprovedTap(JSONObject payload) {
+        ScreenshotSession shot=latestScreenshot;
+        if(shot==null || !shot.id.equals(payload.optString("screenshotId",""))
+                || android.os.SystemClock.elapsedRealtime()-shot.capturedAt>SCREENSHOT_TTL_MS) {
+            latestScreenshot=null;
+            finish(null,"Screenshot expired. Capture the current screen again.");
+            return;
+        }
+        AccessibilityNodeInfo root=getRootInActiveWindow();
+        if(root==null) { latestScreenshot=null; finish(null,"The active screen is unavailable. Capture it again."); return; }
+        String pkg=String.valueOf(root.getPackageName());
+        int windowId=root.getWindowId();
+        Rect bounds=new Rect();root.getBoundsInScreen(bounds);root.recycle();
+        if(!pkg.equals(shot.packageName)||windowId!=shot.windowId||!bounds.equals(shot.allowedBounds)||blocked(pkg)) {
+            latestScreenshot=null;finish(null,"The app window or layout changed after the screenshot. Capture the current screen again.");return;
+        }
+        double imageX=payload.optDouble("x",Double.NaN);
+        double imageY=payload.optDouble("y",Double.NaN);
+        if(!Double.isFinite(imageX)||!Double.isFinite(imageY)
+                ||imageX<0||imageY<0||imageX>=shot.imageWidth||imageY>=shot.imageHeight) {
+            latestScreenshot=null;finish(null,"Tap coordinates are outside the captured image.");return;
+        }
+        float screenX=shot.coordinateBounds.left+(float)((imageX+0.5d)*shot.coordinateBounds.width()/shot.imageWidth);
+        float screenY=shot.coordinateBounds.top+(float)((imageY+0.5d)*shot.coordinateBounds.height()/shot.imageHeight);
+        int pointX=Math.round(screenX), pointY=Math.round(screenY);
+        if(!shot.allowedBounds.contains(pointX,pointY)) {
+            latestScreenshot=null;finish(null,"The selected point is outside the active app window. Choose a point inside the app content.");return;
+        }
+        String reason=payload.optString("reason","").trim();
+        if(reason.isEmpty()||reason.length()>180) {
+            latestScreenshot=null;finish(null,"Explain the exact visible control to tap.");return;
+        }
+
+        // Consume before dispatch to prevent replay, including when Android later cancels the gesture.
+        latestScreenshot=null;
+        Path path=new Path();
+        path.moveTo(screenX,screenY);
+        path.lineTo(screenX+0.1f,screenY+0.1f);
+        GestureDescription gesture=new GestureDescription.Builder()
+                .addStroke(new GestureDescription.StrokeDescription(path,0,90))
+                .build();
+        boolean dispatched=dispatchGesture(gesture,new GestureResultCallback() {
+            @Override public void onCompleted(GestureDescription completedGesture) {
+                clearNodes();snapshotPackage="";
+                try {
+                    finish(new JSONObject().put("ok",true).put("x",imageX).put("y",imageY)
+                            .put("note","One tap was dispatched. Read or capture the screen again to verify the result."),null);
+                } catch (Exception e) {
+                    finish(null,"Tap was dispatched, but its result could not be returned. Read the screen again.");
+                }
+            }
+            @Override public void onCancelled(GestureDescription cancelledGesture) {
+                clearNodes();snapshotPackage="";
+                finish(null,"Android cancelled the tap gesture. No successful action is claimed.");
+            }
+        },main);
+        if(!dispatched) finish(null,"Android refused to dispatch the tap. No successful action is claimed.");
     }
 
     private void finish(JSONObject result, String error) {
