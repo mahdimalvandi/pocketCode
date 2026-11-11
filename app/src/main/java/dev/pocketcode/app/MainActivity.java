@@ -347,11 +347,13 @@ public final class MainActivity extends Activity {
                 ordinary(message,"باز کردن اپ",pkg+"\nفقط اپ باز می‌شود.", () -> {
                     Intent intent=getPackageManager().getLaunchIntentForPackage(pkg);
                     if(intent==null)throw friendly("App is not installed or cannot be launched.");
+                    PhoneAccessService access=PhoneAccessService.current();
+                    if(access!=null)access.invalidateScreenshot();
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);startActivity(intent);
                     respond(message,new JSONObject().put("ok",true),null);
                 });return;
             }
-            case "read_screen": case "capture_screen": case "click_element": case "type_text": case "scroll_element": case "phone_back": {
+            case "read_screen": case "capture_screen": case "tap_screen": case "click_element": case "type_text": case "scroll_element": case "phone_back": {
                 PhoneAccessService service=PhoneAccessService.current();
                 if(service==null)throw friendly("سرویس Accessibility فعال نیست. از بخش دسترسی‌ها خودت فعالش کن.");
                 service.request(action,payload,(value,error)->respond(message,value,error));return;
