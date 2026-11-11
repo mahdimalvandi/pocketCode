@@ -39,6 +39,8 @@ public class VisualTapCoordinatesTest {
         assertTrue(VisualTapCoordinates.isSensitiveReason("دکمه پرداخت"));
         assertTrue(VisualTapCoordinates.isSensitiveReason("حذف"));
         assertTrue(VisualTapCoordinates.isSensitiveReason("confirm transfer"));
+        assertTrue(VisualTapCoordinates.isSensitiveReason("share this account"));
+        assertTrue(VisualTapCoordinates.isSensitiveReason("واریز وجه"));
     }
 
     @Test public void allowsHarmlessNavigationLabels() {
