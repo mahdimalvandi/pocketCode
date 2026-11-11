@@ -79,7 +79,7 @@ public final class PhoneAccessService extends AccessibilityService {
     public static PhoneAccessService current() { return instance; }
     @Override protected void onServiceConnected() { instance = this; }
     @Override public void onAccessibilityEvent(AccessibilityEvent event) { /* Deliberately do not collect events. */ }
-    @Override public void onInterrupt() { clearNodes(); }
+    @Override public void onInterrupt() { latestScreenshot=null; clearNodes(); }
     @Override public void onDestroy() {
         instance = null;
         if (approval != null) approval.dismiss();
@@ -104,7 +104,7 @@ public final class PhoneAccessService extends AccessibilityService {
     public void request(String action, JSONObject payload, Reply reply) {
         main.post(() -> {
             if (waiting != null) { reply.done(null, "Another approval is pending."); return; }
-            if (!action.equals("capture_screen") && !action.equals("tap_screen")) latestScreenshot=null;
+            if (!action.equals("tap_screen")) latestScreenshot=null;
             waiting = reply;
             String detail = action + "\n" + payload.toString();
             String requestedPackage = "";
@@ -133,7 +133,7 @@ public final class PhoneAccessService extends AccessibilityService {
                         && shot.packageName.equals(screenshotPackage) && shot.windowId==requestedWindowId
                         && !blocked(screenshotPackage) && Double.isFinite(tapX) && Double.isFinite(tapY)
                         && tapX>=0 && tapY>=0 && tapX<shot.imageWidth && tapY<shot.imageHeight
-                        && !reason.isEmpty() && reason.length()<=180
+                        && !VisualTapCoordinates.isSensitiveReason(reason) && reason.length()<=180
                         && shot.id.equals(payload.optString("screenshotId",""));
                 if(!valid){latestScreenshot=null;finish(null,"Screenshot is missing, expired, from another screen, or the coordinates/reason are invalid. Capture the current screen again.");return;}
                 detail += "\nRequested target: " + reason + "\nScreenshot coordinate: (" + tapX + ", " + tapY + ")"
@@ -325,16 +325,19 @@ public final class PhoneAccessService extends AccessibilityService {
                 ||imageX<0||imageY<0||imageX>=shot.imageWidth||imageY>=shot.imageHeight) {
             latestScreenshot=null;finish(null,"Tap coordinates are outside the captured image.");return;
         }
-        float screenX=shot.coordinateBounds.left+(float)((imageX+0.5d)*shot.coordinateBounds.width()/shot.imageWidth);
-        float screenY=shot.coordinateBounds.top+(float)((imageY+0.5d)*shot.coordinateBounds.height()/shot.imageHeight);
-        int pointX=Math.round(screenX), pointY=Math.round(screenY);
-        if(!shot.allowedBounds.contains(pointX,pointY)) {
-            latestScreenshot=null;finish(null,"The selected point is outside the active app window. Choose a point inside the app content.");return;
-        }
         String reason=payload.optString("reason","").trim();
-        if(reason.isEmpty()||reason.length()>180) {
-            latestScreenshot=null;finish(null,"Explain the exact visible control to tap.");return;
+        if(VisualTapCoordinates.isSensitiveReason(reason)||reason.length()>180) {
+            latestScreenshot=null;finish(null,"This target is sensitive or its description is missing. Use an Accessibility element and a separate safety review instead.");return;
         }
+        float[] mapped;
+        try {
+            mapped=VisualTapCoordinates.map(imageX,imageY,shot.imageWidth,shot.imageHeight,
+                    shot.coordinateBounds.left,shot.coordinateBounds.top,shot.coordinateBounds.right,shot.coordinateBounds.bottom,
+                    shot.allowedBounds.left,shot.allowedBounds.top,shot.allowedBounds.right,shot.allowedBounds.bottom);
+        } catch(IllegalArgumentException e) {
+            latestScreenshot=null;finish(null,"The selected point is outside the active app window or screenshot bounds. Capture the screen again.");return;
+        }
+        float screenX=mapped[0], screenY=mapped[1];
 
         // Consume before dispatch to prevent replay, including when Android later cancels the gesture.
         latestScreenshot=null;
