@@ -21,6 +21,17 @@
     return OBSERVATION_TOOLS.has(String(toolName || ''));
   }
 
+  function allowedDuringVerification(pending, toolName) {
+    return !pending || isObservationTool(toolName);
+  }
+
+  function blockedAfterUnverified(lastVerification, toolName) {
+    if (!lastVerification || lastVerification.status !== 'unverified') return false;
+    if (lastVerification.tool === toolName) return true;
+    return ['user_denied', 'blocked_target'].includes(lastVerification.recovery?.category)
+      && UI_MUTATING_TOOLS.has(String(toolName || ''));
+  }
+
   function expectedOutcome(toolName, args = {}) {
     switch (toolName) {
       case 'open_app':
@@ -95,5 +106,5 @@
     };
   }
 
-  return Object.freeze({requiresVerification, isObservationTool, expectedOutcome, classifyFailure, createVerification});
+  return Object.freeze({requiresVerification, isObservationTool, allowedDuringVerification, blockedAfterUnverified, expectedOutcome, classifyFailure, createVerification});
 });

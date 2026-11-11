@@ -61,3 +61,21 @@ test('permission and blocked-target errors are never retried', () => {
   assert.equal(policy.classifyFailure('read_screen', 'Accessibility service is not enabled.').automaticRetryAllowed, false);
   assert.equal(policy.classifyFailure('read_screen', 'System, security, financial and Pocket Code screens are blocked.').automaticRetryAllowed, false);
 });
+
+test('blocks every non-observation tool while a UI checkpoint is pending', () => {
+  const pending = {actionId:'a-2'};
+  assert.equal(policy.allowedDuringVerification(pending, 'read_screen'), true);
+  assert.equal(policy.allowedDuringVerification(pending, 'capture_screen'), true);
+  assert.equal(policy.allowedDuringVerification(pending, 'click_element'), false);
+  assert.equal(policy.allowedDuringVerification(null, 'click_element'), true);
+});
+
+test('a denied or blocked verification cannot be bypassed with another UI action', () => {
+  const denied = {status:'unverified',tool:'tap_screen',recovery:{category:'user_denied'}};
+  assert.equal(policy.blockedAfterUnverified(denied, 'tap_screen'), true);
+  assert.equal(policy.blockedAfterUnverified(denied, 'click_element'), true);
+  assert.equal(policy.blockedAfterUnverified(denied, 'read_screen'), false);
+  const stale = {status:'unverified',tool:'click_element',recovery:{category:'stale_ui'}};
+  assert.equal(policy.blockedAfterUnverified(stale, 'click_element'), true);
+  assert.equal(policy.blockedAfterUnverified(stale, 'phone_back'), false);
+});

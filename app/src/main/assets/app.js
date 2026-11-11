@@ -131,10 +131,10 @@ function completeVerificationObservation(runtime,toolName){
 async function runTool(call,runtime){
   const args=call.args||{};
   const observer=reliability.isObservationTool(call.name);
-  if(runtime.pendingVerification&&!observer){
+  if(!reliability.allowedDuringVerification(runtime.pendingVerification,call.name)){
     return {error:'A UI action is awaiting verification. Do not perform another action or answer yet; call read_screen, or capture_screen if the tree is insufficient.',recovery:{category:'verification_required',retryPolicy:'never',automaticRetryAllowed:false,nextStep:'Observe the current screen before continuing.'}};
   }
-  if(runtime.lastVerification?.status==='unverified'&&runtime.lastVerification.tool===call.name){
+  if(reliability.blockedAfterUnverified(runtime.lastVerification,call.name)){
     return {error:'The previous action outcome remains unverified. Do not repeat the same action with the same target.',recovery:{category:'outcome_unverified',retryPolicy:'never',automaticRetryAllowed:false,nextStep:'Explain the uncertainty or ask the user how to proceed.'}};
   }
   try{
