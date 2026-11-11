@@ -32,6 +32,6 @@ final class VisualTapCoordinates {
     static boolean isSensitiveReason(String reason) {
         if (reason == null || reason.trim().isEmpty()) return true;
         String normalized = reason.toLowerCase(Locale.ROOT).replaceAll("[^\\p{L}\\p{N}]", "");
-        return normalized.matches("(?s).*(send|submit|delete|remove|clear|pay|payment|purchase|buy|transfer|confirm|logout|signout|block|report|permission|install|approve|authorize|publish|post|forward|call|ارسال|حذف|پاک|پرداخت|خرید|انتقال|تأیید|تایید|مسدود|گزارش|خروج|نصب|انتشار).*");
+        return normalized.matches("(?s).*(send|submit|delete|remove|clear|pay|payment|purchase|buy|transfer|withdraw|deposit|confirm|logout|signout|block|report|permission|install|approve|authorize|publish|post|forward|call|share|ارسال|حذف|پاک|پرداخت|خرید|انتقال|برداشت|واریز|اشتراک|ثبت|تراکنش|تأیید|تایید|مسدود|گزارش|خروج|نصب|انتشار).*");
     }
 }
