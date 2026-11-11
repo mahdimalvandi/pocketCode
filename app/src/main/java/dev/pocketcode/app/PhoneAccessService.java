@@ -343,7 +343,9 @@ public final class PhoneAccessService extends AccessibilityService {
         latestScreenshot=null;
         Path path=new Path();
         path.moveTo(screenX,screenY);
-        path.lineTo(screenX,screenY);
+        float endX=screenX+1f<shot.allowedBounds.right?screenX+1f:screenX-1f;
+        float endY=screenY+1f<shot.allowedBounds.bottom?screenY+1f:screenY-1f;
+        path.lineTo(endX,endY);
         GestureDescription gesture=new GestureDescription.Builder()
                 .addStroke(new GestureDescription.StrokeDescription(path,0,90))
                 .build();
