@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.16.0 (candidate)
+- Broad shared-storage directory listings now return the exact `currentPath`, matched `rootPath`, `isRoot` state and canonical `parentPath`. Parent navigation stops at each volume root, including removable volumes.
+- Added a root navigator that chooses the longest valid canonical root match and rejects sibling-prefix and traversal paths outside the selected volume.
+- Updated the agent tool description and storage policy to require the returned `parentPath` verbatim rather than deriving parents from path depth or string trimming.
+- Added JVM coverage for primary/removable roots, overlapping roots, root boundaries and sibling-prefix escapes. **Not run, not built or device-tested** by request; physical removable-volume permissions and OEM storage behavior remain pending.
+
 ## 0.15.0 (candidate)
 - Bound on-device wake recognizer recovery: expected no-match/speech-timeout results continue normally, while repeated recognizer/service failures use backoff and stop after eight consecutive failures instead of retrying indefinitely.
 - Tightened wake phrase matching to word boundaries, retaining Persian/English spacing variants while rejecting phrases embedded inside longer words.

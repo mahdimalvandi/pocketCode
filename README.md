@@ -1,6 +1,10 @@
 # Pocket Code · Android alpha
 
-**Current source candidate: 0.15.0 (personal-testing alpha).** This candidate hardens wake-phrase recognition, microphone handoff and Gemini speech-transcription response validation. It has not been built, run through the automated test suite, or device-tested yet. The checked-in APK remains the older 0.5.0 build until a batched build and validation. Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
+**Current source candidate: 0.16.0 (personal-testing alpha).** This candidate makes shared-storage parent navigation use the exact discovered volume root, including removable volumes. It has not been built, run through the automated test suite, or device-tested yet. The checked-in APK remains the older 0.5.0 build until a batched build and validation. Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
+
+## v0.16.0 candidate: exact storage-root navigation
+
+Directory listings now include the exact current path, matched volume root, root flag and parent path. Navigation uses the returned parent path verbatim and cannot climb above a removable or primary volume root. The native path resolver selects the longest canonical matching root and rejects sibling-prefix escapes.
 
 ## v0.15.0 candidate: voice wake and Persian dictation
 

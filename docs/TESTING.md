@@ -58,7 +58,7 @@ Execution timeline mock checks:
 |---|---|
 | Install | Fresh install; upgrade using original signer; retain settings/chats; uninstall/export warning |
 | Permissions | Deny/regrant all-files, microphone and Accessibility; restricted-settings sideload flow |
-| Storage | Internal root, Downloads, removable card, empty/large directories, protected paths, revoked permission |
+| Storage | Internal root and exact parentPath; removable SD/USB roots and longest-root selection; root boundary; sibling-prefix/traversal escape; symlink/canonical containment; Downloads; empty/large directories; pagination; protected paths; revoked permission |
 | Text | Persian UTF-8, malformed UTF-8, binary, 512 KB boundary, symlink/canonical containment |
 | SAF mutation | Cancel approval, approve disposable overwrite, missing parent, read-only provider, interrupted write |
 | Accessibility | Read non-sensitive notes app; fresh IDs; stale nodes; app change; keyboard/password field; blocked package |
