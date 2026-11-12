@@ -7,7 +7,8 @@
 - The bounded app-private journal stores operation IDs, native action names, states, timestamps and optional resolution only. It does not store tool arguments, paths, typed text, messages or screen content. Terminal resolved/failed records are pruned before unresolved records; a journal full of unresolved receipts fails closed.
 - Added JavaScript tests for required receipts, matching observation surfaces and duplicate classification, plus JVM tests for covered action types, ID validation, action conflicts, known preflight failures and process-interruption recovery.
 - The exact semantic match between the intended target and the observation is partly enforced by the JS tool gate and Agent interpretation; Native does not independently compare a stored path, recipient or typed value. This remains a limitation for final device validation.
-- **Automated tests, lint, build and device validation are pending.** This log will be updated with actual GitHub Actions results after the one requested validation run.
+- GitHub Actions run [43240414008](https://github.com/mahdimalvandi/pocketCode/actions/runs/43240414008): all Node syntax checks and all five Node test suites passed. The run stopped at `:app:mergeDebugResources` before JVM unit tests, lint or APK assembly. AAPT2 reported an invalid string escape for `accessibility_description`; investigation traced it to unescaped apostrophes in the existing Android resource string, outside the idempotency feature diff.
+- The resource text has been rewritten without apostrophes, and the narrow validation path filter now includes `strings.xml` so the fix triggers one retry of the full test/lint/build workflow. JVM tests, lint, APK assembly, signing, checksum and device validation remain pending.
 
 ## v0.17.0 candidate / release integrity and signing provenance
 

@@ -10,6 +10,7 @@ on:
       - 'app/src/main/java/dev/pocketcode/app/MainActivity.java'
       - 'app/src/main/java/dev/pocketcode/app/OperationReceipt*.java'
       - 'app/src/main/assets/app.js'
+      - 'app/src/main/res/values/strings.xml'
       - 'app/src/main/assets/agent-reliability.js'
       - 'app/src/test/java/dev/pocketcode/app/OperationReceiptPolicyTest.java'
       - 'app/src/test/js/agent-reliability.test.js'
