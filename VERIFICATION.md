@@ -1,5 +1,15 @@
 # Verification log
 
+## v0.15.0 candidate / wake reliability and Persian transcription validation
+
+- Wake-listener retry behavior now distinguishes normal `ERROR_NO_MATCH`/`ERROR_SPEECH_TIMEOUT` from recognizer/service failures. Repeated failures use bounded backoff and stop after eight consecutive failures; unsupported on-device Persian language remains an explicit stop condition.
+- Wake phrase matching uses Unicode-aware token boundaries and retains recognized Persian/English spacing variants while rejecting partial matches embedded inside longer words.
+- Native code prevents wake listening from starting while any manual recorder is active, stops the wake listener before manual recording, and rejects a manual recording request while a wake transcription is still in flight.
+- Transcription validates the generated PCM16 mono 16 kHz WAV header and supports OpenAI-compatible string or text-part-array response content. Empty/malformed transcript responses are explicit errors; no alternate ASR provider is silently substituted. Manual dictation still populates the draft for review rather than sending automatically.
+- Replaced the malformed v0.14.0 prompt literal concatenation with JSON-escaped JavaScript string literals for the system and authoritative navigation policy.
+- Added JVM tests for wake phrase boundaries and WAV validation. **Not run, not built or device-tested by request.** Real Persian recognition accuracy, microphone ownership on OEM devices, silence/noise thresholds and 9Router audio fidelity still require the final physical-device test cycle.
+
+
 ## v0.14.0 candidate / Accessibility target diagnostics and action safety
 
 - Clickable-ancestor lookup now traverses up to sixteen parent levels. A successful click returns only the resolved view class and ancestor depth as diagnostic metadata; no message text or raw path is added to persistent logs.

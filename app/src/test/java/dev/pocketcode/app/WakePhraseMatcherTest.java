@@ -28,6 +28,10 @@ public class WakePhraseMatcherTest {
         assertFalse(WakePhraseMatcher.matches("Code"));
         assertFalse(WakePhraseMatcher.matches("کد پاکت"));
         assertFalse(WakePhraseMatcher.matches("سلام، حالت چطوره؟"));
+        assertFalse(WakePhraseMatcher.matches("myPocketCoded"));
+        assertFalse(WakePhraseMatcher.matches("PocketCodeX"));
+        assertFalse(WakePhraseMatcher.matches("پاکتکدوم"));
+        assertFalse(WakePhraseMatcher.matches("کدپاکت"));
         assertFalse(WakePhraseMatcher.matches(null));
     }
 }

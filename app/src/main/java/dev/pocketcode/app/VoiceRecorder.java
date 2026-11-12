@@ -14,6 +14,8 @@ import java.nio.charset.StandardCharsets;
 
 /** In-memory mono PCM recorder. The automatic mode ends after trailing silence. */
 final class VoiceRecorder {
+    private static final int WAV_HEADER_BYTES=44;
+    private static final int MAX_RECORDING_SECONDS=60;
     private final Context context;
     private AudioRecord recorder;
     private Thread thread;
@@ -34,7 +36,7 @@ final class VoiceRecorder {
     }
 
     synchronized void startUntilSilence(int maxSeconds,int silenceMillis,Runnable callback) throws Exception {
-        if(maxSeconds<2 || maxSeconds>60 || silenceMillis<500 || silenceMillis>5000 || callback==null)
+        if(maxSeconds<2||maxSeconds>MAX_RECORDING_SECONDS||silenceMillis<500||silenceMillis>5000||callback==null)
             throw new IllegalArgumentException("Invalid automatic recording limits.");
         startInternal(maxSeconds,silenceMillis,callback);
     }
@@ -62,7 +64,7 @@ final class VoiceRecorder {
                 int n=recorder.read(data,0,Math.min(data.length,maximumBytes-pcm.size()));
                 if(n<0){failure="Microphone read failed.";break;}
                 if(n>0){
-                    if(silenceDetector!=null && silenceDetector.shouldStop(data,n,System.nanoTime())){
+                    if(silenceDetector!=null&&silenceDetector.shouldStop(data,n,System.nanoTime())){
                         pcm.write(data,0,n);
                         break;
                     }
@@ -95,7 +97,7 @@ final class VoiceRecorder {
     }
 
     static int calculateRms(byte[] data,int length) {
-        if(data==null || length<0 || length>data.length)
+        if(data==null||length<0||length>data.length)
             throw new IllegalArgumentException("Invalid PCM sample range.");
         int samples=length/2;
         if(samples==0)return 0;
@@ -111,10 +113,34 @@ final class VoiceRecorder {
         return calculateRms(data,length)>=380;
     }
 
+    static boolean isValidPcm16MonoWav(byte[] wav) {
+        if(wav==null||wav.length<WAV_HEADER_BYTES+2
+                ||wav.length>WAV_HEADER_BYTES+16000*2*MAX_RECORDING_SECONDS
+                ||((wav.length-WAV_HEADER_BYTES)&1)!=0)return false;
+        if(!asciiAt(wav,0,"RIFF")||!asciiAt(wav,8,"WAVE")
+                ||!asciiAt(wav,12,"fmt ")||!asciiAt(wav,36,"data"))return false;
+        ByteBuffer header=ByteBuffer.wrap(wav).order(ByteOrder.LITTLE_ENDIAN);
+        return header.getInt(4)==wav.length-8
+                &&header.getInt(16)==16
+                &&header.getShort(20)==1
+                &&header.getShort(22)==1
+                &&header.getInt(24)==16000
+                &&header.getInt(28)==32000
+                &&header.getShort(32)==2
+                &&header.getShort(34)==16
+                &&header.getInt(40)==wav.length-WAV_HEADER_BYTES;
+    }
+
+    private static boolean asciiAt(byte[] data,int offset,String expected) {
+        if(offset<0||offset+expected.length()>data.length)return false;
+        for(int i=0;i<expected.length();i++)if(data[offset+i]!=(byte)expected.charAt(i))return false;
+        return true;
+    }
+
     static byte[] encodeWav(byte[] samples) {
-        if(samples==null || (samples.length&1)!=0)
+        if(samples==null||(samples.length&1)!=0)
             throw new IllegalArgumentException("PCM data must contain complete 16-bit samples.");
-        ByteBuffer wav=ByteBuffer.allocate(44+samples.length).order(ByteOrder.LITTLE_ENDIAN);
+        ByteBuffer wav=ByteBuffer.allocate(WAV_HEADER_BYTES+samples.length).order(ByteOrder.LITTLE_ENDIAN);
         wav.put("RIFF".getBytes(StandardCharsets.US_ASCII)).putInt(36+samples.length).put("WAVEfmt ".getBytes(StandardCharsets.US_ASCII))
             .putInt(16).putShort((short)1).putShort((short)1).putInt(16000).putInt(32000).putShort((short)2).putShort((short)16)
             .put("data".getBytes(StandardCharsets.US_ASCII)).putInt(samples.length).put(samples);
