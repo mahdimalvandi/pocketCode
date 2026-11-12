@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.18.0 (candidate)
+- Added per-app Accessibility policies: read-only, navigation, confirm-actions and blocked. Native Java enforces the active package policy before and after approvals; unknown/corrupt policy data fails closed, and built-in system/security packages remain denied.
+- Added a searchable per-app policy editor in Access settings. New apps default to confirm-actions; clicks, text replacement and visual taps always receive a native approval in that mode, even with global automatic navigation enabled.
+- Added JVM unit cases for policy levels, invalid policy values and built-in package restrictions; added device-validation scenarios to docs/TESTING.md.
+- Added docs/ROADMAP.md and specified persistent personal memory as the next product capability, including cross-chat recall, researched-entity recognition and user controls.
+- **No tests, lint, build or GitHub Actions were run by request.** The checked-in APK remains v0.5.0; no v0.18.0 APK has been generated.
+
 ## 0.17.0 (candidate)
 - Local SDK builds now restrict the generated debug keystore to the current user and produce a verified SHA-256 checksum plus provenance metadata (package, version, source revision and APK hash).
 - The manual-only GitHub Actions workflow now generates and verifies matching checksum/provenance files and uploads them beside the CI APK. The workflow remains `workflow_dispatch` only; no automatic build was triggered.

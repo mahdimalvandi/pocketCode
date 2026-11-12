@@ -55,6 +55,16 @@ public final class PhoneAccessService extends AccessibilityService {
         }
     }
     private boolean automatic() { return getSharedPreferences("secure_settings",MODE_PRIVATE).getBoolean("automaticNavigation",false); }
+    private String appPermissionPolicyFor(String packageName) {
+        try {
+            JSONObject policies=new JSONObject(getSharedPreferences("secure_settings",MODE_PRIVATE)
+                    .getString("appPermissionPolicies","{}"));
+            return AppPermissionPolicy.normalize(policies.optString(packageName,AppPermissionPolicy.DEFAULT_POLICY));
+        } catch(Exception ignored) {
+            return AppPermissionPolicy.READ_ONLY;
+        }
+    }
+
     private static final int MAX_CLICKABLE_ANCESTOR_DEPTH = 16;
     private static final class ClickTarget {
         final AccessibilityNodeInfo node;
@@ -110,11 +120,7 @@ public final class PhoneAccessService extends AccessibilityService {
     }
     private void clearNodes() { for (AccessibilityNodeInfo n : nodes.values()) n.recycle(); nodes.clear(); }
     private boolean blocked(String pkg) {
-        String p = pkg.toLowerCase(java.util.Locale.ROOT);
-        return pkg.equals(getPackageName()) || p.startsWith("com.android.") || p.contains("systemui")
-                || p.contains("permissioncontroller") || p.contains("settings") || p.contains("keyboard")
-                || p.contains("inputmethod") || p.contains("authenticator") || p.contains("bank")
-                || p.contains("wallet") || p.contains("payment") || p.contains("password");
+        return AppPermissionPolicy.isBuiltInBlockedPackage(pkg,getPackageName());
     }
     private AccessibilityNodeInfo safeRoot() throws Exception {
         AccessibilityNodeInfo root = getRootInActiveWindow();
@@ -139,6 +145,11 @@ public final class PhoneAccessService extends AccessibilityService {
                 detail+="\nCurrent app: "+requestedPackage; visible.recycle();
             }
             final String screenshotPackage = requestedPackage;
+            final String appPolicy = appPermissionPolicyFor(requestedPackage);
+            if(!AppPermissionPolicy.allows(appPolicy,action)){
+                finish(null,"App permission policy '"+appPolicy+"' blocks '"+action+"' for "+requestedPackage+". Change it in Pocket Code → Access → per-app policies if you want to allow this operation.");
+                return;
+            }
             final int screenshotWindowId = requestedWindowId;
             final Rect screenshotBounds = new Rect(requestedBounds);
             if (action.equals("capture_screen") && (Build.VERSION.SDK_INT < Build.VERSION_CODES.R
@@ -168,7 +179,8 @@ public final class PhoneAccessService extends AccessibilityService {
             }
             if (detail.length() > 4000) { waiting = null; reply.done(null, "Action is too large."); return; }
             // Screenshot capture and visual taps always require a fresh native approval, even in automatic mode.
-            boolean needsApproval=action.equals("capture_screen") || action.equals("tap_screen") || !automatic();
+            boolean needsApproval=action.equals("capture_screen") || action.equals("tap_screen")
+                    || AppPermissionPolicy.requiresApproval(appPolicy,action) || !automatic();
             if(action.equals("click_element")){
                 AccessibilityNodeInfo source=nodes.get(payload.optString("elementId"));
                 ClickTarget target=source==null?null:clickTarget(source);
@@ -360,7 +372,8 @@ public final class PhoneAccessService extends AccessibilityService {
         String pkg=String.valueOf(root.getPackageName());
         int windowId=root.getWindowId();
         Rect bounds=new Rect();root.getBoundsInScreen(bounds);root.recycle();
-        if(!pkg.equals(shot.packageName)||windowId!=shot.windowId||!bounds.equals(shot.allowedBounds)||blocked(pkg)) {
+        if(!pkg.equals(shot.packageName)||windowId!=shot.windowId||!bounds.equals(shot.allowedBounds)||blocked(pkg)
+                ||!AppPermissionPolicy.allows(appPermissionPolicyFor(pkg),"tap_screen")) {
             latestScreenshot=null;finish(null,"The app window or layout changed after the screenshot. Capture the current screen again.");return;
         }
         double imageX=payload.optDouble("x",Double.NaN);
@@ -419,6 +432,8 @@ public final class PhoneAccessService extends AccessibilityService {
         AccessibilityNodeInfo root = safeRoot();
         try {
             String pkg = String.valueOf(root.getPackageName());
+            if(!AppPermissionPolicy.allows(appPermissionPolicyFor(pkg),action))
+                throw new Exception("The current app permission policy blocks this operation. Change it in Pocket Code → Access → per-app policies.");
             if (action.equals("read_screen")) {
                 clearNodes(); epoch++; snapshotPackage = pkg;
                 JSONArray items = new JSONArray(); walk(root,items,0);

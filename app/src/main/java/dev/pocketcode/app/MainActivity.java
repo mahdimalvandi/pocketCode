@@ -212,7 +212,7 @@ public final class MainActivity extends Activity {
                     if(PhoneAccessService.current()!=null)PhoneAccessService.current().stopAutomation();
                     result=new JSONObject().put("ok",true);break;
                 }
-                confirm(message,"کنترل خودکار کارهای معمولی","خواندن صفحه و فایل، بازکردن اپ، تایپ و کلیک معمولی بدون پرسش انجام می‌شود. متن صفحه ممکن است از طریق 9Router ارسال شود. ارسال پیام، حذف، پرداخت و تغییر فایل همچنان تأیید می‌خواهند. تشخیص دکمه‌های حساس قطعی نیست؛ فقط در اپ غیرحساس استفاده کن. از همین بخش می‌توانی متوقفش کنی.",()->{
+                confirm(message,"کنترل خودکار طبق سیاست هر اپ","خواندن صفحه و پیمایش، در اپ‌هایی که مجاز کرده‌ای، بدون تأیید تکراری انجام می‌شود. تایپ و کلیک در حالت پیش‌فرض هر بار تأیید بومی می‌خواهند؛ اپ‌های مسدودشده اصلاً کنترل نمی‌شوند. محتوای صفحه ممکن است از طریق 9Router ارسال شود. محدودیت داخلی اپ‌های سیستمی و مالی همچنان برقرار است.",()->{
                     preferences.edit().putBoolean("automaticNavigation",true).commit();respond(message,new JSONObject().put("ok",true),null);
                 });return;
             case "wakeStart":
@@ -278,6 +278,26 @@ public final class MainActivity extends Activity {
                     .put("accessibility",PhoneAccessService.current()!=null)
                     .put("wakeWordEnabled",preferences.getBoolean("wakeWordEnabled",false))
                     .put("wakeWordActive",wakeWordListener!=null || wakeCommandRecording || wakeCommandProcessing); break;
+            case "getAppPolicies":
+                result=buildAppPolicyList();break;
+            case "setAppPolicy": {
+                String pkg=payload.optString("package","").trim();
+                String policy=payload.optString("policy","");
+                if(!pkg.matches("[a-zA-Z0-9_.]+") || pkg.equals(getPackageName()))
+                    throw friendly("Invalid app package.");
+                if(AppPermissionPolicy.isBuiltInBlockedPackage(pkg,getPackageName()))
+                    throw friendly("This protected system/security app has a fixed policy and cannot be changed.");
+                if(!AppPermissionPolicy.isValidPolicy(policy))throw friendly("Invalid app permission policy.");
+                if(getPackageManager().getLaunchIntentForPackage(pkg)==null)
+                    throw friendly("App is not installed or cannot be launched.");
+                JSONObject saved;
+                try{saved=new JSONObject(preferences.getString("appPermissionPolicies","{}"));}
+                catch(Exception ignored){throw friendly("Saved app policies are unreadable. No policy was changed; clear app data only if you accept losing local settings and chat history.");}
+                saved.put(pkg,policy);
+                if(!preferences.edit().putString("appPermissionPolicies",saved.toString()).commit())
+                    throw friendly("App permission policy could not be saved.");
+                result=new JSONObject().put("ok",true).put("package",pkg).put("policy",policy);break;
+            }
             case "enablePhoneRead":
                 confirm(message,"اجازهٔ خواندن گسترده بدون پرسش تکراری",
                     "با فعال‌کردن، مدل می‌تواند نام و محتوای فایل‌های قابل‌خواندن حافظهٔ مشترک را بدون تأیید جدا بخواند و از طریق 9Router ارسال کند. فایل حساس هم ممکن است خوانده شود. اسکن خودکار پس‌زمینه نداریم. اندروید مجوز همهٔ فایل‌ها را با امکان نوشتن می‌دهد، اما مسیر دسترسی گستردهٔ این اپ فقط ابزار خواندن دارد؛ نوشتن فقط از مسیرهای قبلی و با تأیید جداست. فایل‌های خصوصی اپ‌ها باز نمی‌شوند. می‌توانی این رضایت و مجوز را از همین بخش قطع کنی.", () -> {
@@ -321,7 +341,7 @@ public final class MainActivity extends Activity {
                 preferences.edit().remove("sharedTree").commit();result=new JSONObject().put("ok",true);break;
             }
             case "accessibilitySettings":
-                confirm(message,"فعال‌سازی کنترل گوشی", "این دسترسی حساس است. متن صفحه می‌تواند از طریق 9Router به مدل ارسال شود. وقتی کنترل خودکار را خودت فعال کرده‌ای، پیمایش و کلیک‌های معمولی ممکن است بدون تأیید جداگانه انجام شوند؛ کلیک‌های حساس یا نامشخص باید در اندروید تأیید شوند. تشخیص حساسیت از متن و شناسه‌های رابط استفاده می‌کند و کامل نیست؛ قبل از فعال‌سازی، صفحه‌های بانکی، پرداخت، احراز هویت و اطلاعات خصوصی را ببند. برای ارسال، حذف، پرداخت و تغییرات برگشت‌ناپذیر همیشه پیش‌نمایش را بررسی و تأیید کن. پس از پایان، سرویس را خاموش کن.", () -> {
+                confirm(message,"فعال‌سازی کنترل گوشی", "این دسترسی حساس است. متن صفحه می‌تواند از طریق 9Router به مدل ارسال شود. وقتی کنترل خودکار را روشن می‌کنی، رفتار هر اپ طبق سیاست جداگانهٔ آن در بخش دسترسی‌ها محدود می‌شود: فقط‌خواندنی، پیمایش، تأیید اقدامات یا مسدود. در حالت تأیید اقدامات، هر کلیک و تایپ تأیید بومی جداگانه می‌خواهد. محدودیت اپ‌های سیستمی و حساس قابل override نیست و تشخیص همهٔ صفحه‌های حساس تضمینی نیست. قبل از فعال‌سازی، صفحه‌های بانکی، پرداخت، احراز هویت و اطلاعات خصوصی را ببند. پس از پایان، سرویس را خاموش کن.", () -> {
                     startActivity(new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS));respond(message,new JSONObject().put("ok",true),null);
                 });return;
             case "listShared":
@@ -352,6 +372,10 @@ public final class MainActivity extends Activity {
             case "openApp": {
                 final String pkg=payload.getString("package");
                 if(!pkg.matches("[a-zA-Z0-9_.]+"))throw friendly("Invalid app package.");
+                if(AppPermissionPolicy.isBuiltInBlockedPackage(pkg,getPackageName()))
+                    throw friendly("This is a built-in protected system/security app and cannot be opened by the Agent.");
+                if(AppPermissionPolicy.BLOCKED.equals(appPermissionPolicyFor(pkg)))
+                    throw friendly("App policy blocked opening "+pkg+". Change it in Pocket Code → Access → per-app policies if you want to allow this app.");
                 ordinary(message,"باز کردن اپ",pkg+"\nفقط اپ باز می‌شود.", () -> {
                     Intent intent=getPackageManager().getLaunchIntentForPackage(pkg);
                     if(intent==null)throw friendly("App is not installed or cannot be launched.");
@@ -421,6 +445,44 @@ public final class MainActivity extends Activity {
             default: throw friendly("Unknown action.");
         }
         respond(message, result, null);
+    }
+
+    private String appPermissionPolicyFor(String packageName) {
+        try {
+            JSONObject policies=new JSONObject(preferences.getString("appPermissionPolicies","{}"));
+            return AppPermissionPolicy.normalize(policies.optString(packageName,AppPermissionPolicy.DEFAULT_POLICY));
+        } catch(Exception ignored) {
+            return AppPermissionPolicy.READ_ONLY;
+        }
+    }
+
+    private JSONArray buildAppPolicyList() throws Exception {
+        JSONObject saved;
+        boolean savedPoliciesValid=true;
+        try{saved=new JSONObject(preferences.getString("appPermissionPolicies","{}"));}
+        catch(Exception ignored){saved=new JSONObject();savedPoliciesValid=false;}
+        Intent launcher=new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER);
+        java.util.List<android.content.pm.ResolveInfo> matches=
+                new ArrayList<>(getPackageManager().queryIntentActivities(launcher,0));
+        Collections.sort(matches,(left,right)->String.CASE_INSENSITIVE_ORDER.compare(
+                String.valueOf(left.loadLabel(getPackageManager())),
+                String.valueOf(right.loadLabel(getPackageManager()))));
+        Set<String> seen=new java.util.HashSet<>();
+        JSONArray apps=new JSONArray();
+        for(android.content.pm.ResolveInfo info:matches) {
+            if(info.activityInfo==null)continue;
+            String pkg=info.activityInfo.packageName;
+            if(pkg==null || pkg.equals(getPackageName())
+                    || AppPermissionPolicy.isBuiltInBlockedPackage(pkg,getPackageName()) || !seen.add(pkg))continue;
+            apps.put(new JSONObject()
+                    .put("package",pkg)
+                    .put("label",String.valueOf(info.loadLabel(getPackageManager())))
+                    .put("policy",savedPoliciesValid
+                            ? AppPermissionPolicy.normalize(saved.optString(pkg,AppPermissionPolicy.DEFAULT_POLICY))
+                            : AppPermissionPolicy.READ_ONLY));
+            if(apps.length()>=200)break;
+        }
+        return apps;
     }
 
     private void ordinary(JSONObject message,String title,String detail,Work approved) {

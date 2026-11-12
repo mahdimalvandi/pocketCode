@@ -41,7 +41,7 @@ jobs:
         run: |
           APK=app/build/outputs/apk/debug/app-debug.apk
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$APK"
-          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -F "package: name='dev.pocketcode.app' versionCode='17' versionName='0.17.0'"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -F "package: name='dev.pocketcode.app' versionCode='18' versionName='0.18.0'"
           unzip -t "$APK"
           (
             cd "$(dirname "$APK")"
@@ -50,8 +50,8 @@ jobs:
           )
           {
             echo "applicationId=dev.pocketcode.app"
-            echo "versionCode=17"
-            echo "versionName=0.17.0"
+            echo "versionCode=18"
+            echo "versionName=0.18.0"
             echo "sourceRevision=$(git rev-parse HEAD)"
             echo "apkSha256=$(sha256sum "$APK" | awk '{print $1}')"
           } > "$APK.provenance.txt"

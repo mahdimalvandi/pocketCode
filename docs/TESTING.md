@@ -9,7 +9,8 @@
 - `node --test app/src/test/js/agent-tool-batching.test.js` (batch safety classification, bounds, task/verification gating and mixed-call fallback).
 - `node --test app/src/test/js/agent-execution-timeline.test.js` (event bounds, persistence sanitization, duration/status transitions, approval states, UI-verification states and failure classification).
 - `node --test app/src/test/js/agent-run-control.test.js` (immediate stop state, idempotent requests, operation-boundary gating and in-flight completion semantics).
-- `gradle testDebugUnitTest` (wake-phrase normalization, PCM RMS threshold, trailing-silence state transitions, WAV header/encoding, visual-tap coordinate mapping and sensitive-label deny-list).
+- `gradle testDebugUnitTest` (wake-phrase normalization, PCM RMS threshold, trailing-silence state transitions, WAV header/encoding, visual-tap coordinate mapping, sensitive-label deny-list and per-app permission-policy matrix).
+- Per-app policy matrix: verify read_only blocks scroll/back/click/type/tap; navigation permits scroll/back but blocks click/type/tap; confirm_actions requires native confirmation for every click/type/tap; blocked denies app launch and all Accessibility actions; unknown policy values fail closed to read_only.
 - `gradle lintDebug` and `gradle assembleDebug`.
 - Verify debug APK with `apksigner`, confirm package/version metadata with `aapt dump badging`, and check ZIP integrity with `unzip -t`.
 - CI uploads JUnit XML and the Android Lint HTML report for inspection.
@@ -85,3 +86,12 @@ Record app version, Android/OEM, exact task, active package, last tool result/er
 - Keep the provenance file with the APK and confirm its source revision and reported SHA-256 match the artifact.
 - Compare the certificate with the installed personal build before an in-place upgrade. A CI debug signature is not interchangeable with the local personal key.
 - Do not publish the project as open-source under an assumed license; the owner must choose the license.
+
+## Per-app policy device validation (required before release)
+- Set Telegram to read_only: verify screen text can be read (after global consent) but scroll, Back, click, type, screenshot tap and other blocked actions are rejected as defined.
+- Set a harmless test app to navigation: verify read, scroll and Back work while click, text replacement and visual tap are rejected.
+- Set the harmless test app to confirm_actions: verify every click and text replacement displays a native approval even with automatic navigation enabled; denying the approval performs no action.
+- Set a harmless test app to blocked: verify open_app, read_screen, capture_screen and all Accessibility operations are denied.
+- Change policies while moving between two apps; confirm policy lookup follows the active package, not the previously observed package.
+- Reinstall/update the app without clearing app data: verify saved package policies persist; install a new app and verify it defaults to confirm_actions.
+- Confirm built-in system/security/financial package blocks cannot be overridden in the policy UI.
