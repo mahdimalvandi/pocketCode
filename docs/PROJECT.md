@@ -4,7 +4,7 @@
 Pocket Code is a personal Android coding/phone assistant inspired by OpenCode's quiet dark interface. Tools run on the phone. AI inference runs remotely through an existing 9Router endpoint. It is not an official OpenCode client or a full port.
 
 ## Current release
-0.13.0 source candidate, code 13; Android 8+ (minSdk 26), compile/target SDK 35; SDK-only Java native host and bundled Persian RTL web interface. The checked-in `dist/pocket-code-debug.apk` remains the older 0.5.0 build until the next batched build and verification.
+0.14.0 source candidate, code 14; Android 8+ (minSdk 26), compile/target SDK 35; SDK-only Java native host and bundled Persian RTL web interface. The checked-in `dist/pocket-code-debug.apk` remains the older 0.5.0 build until the next batched build and verification.
 
 ## User requirements and implemented behavior
 | Area | Current behavior |
@@ -14,8 +14,8 @@ Pocket Code is a personal Android coding/phone assistant inspired by OpenCode's 
 | Workspace | App-private UTF-8 text files; list/read/create/overwrite/delete; mutations require native approval |
 | Selected phone folder | Android SAF tree chosen by user; read/list/write; overwrite confirmation; no guaranteed atomic writes |
 | Broad phone reading | One-time app consent plus OS all-files/legacy permission; read-only adapter; discover roots, list 200 entries/page, read UTF-8 up to 512 KB |
-| App control | Accessibility screen text, fresh element IDs, click, text entry, scroll, back; launcher discovery/open. On-demand screenshot fallback (API 30+) and one-shot `tap_screen` from a fresh screenshot, each requiring native approval. Every UI-changing action is followed by a runtime-enforced fresh screen observation before the Agent may continue or claim success |
-| Automatic navigation | Opt-in; ordinary operations skip repeated confirmation; sensitive/unknown clicks still prompt. Screenshot capture and every visual tap always prompt separately |
+| App control | Accessibility screen text, fresh element IDs, click with up-to-16-level clickable-ancestor resolution, text entry with an exact replacement-text confirmation preview, scroll, back; launcher discovery/open. On-demand screenshot fallback (API 30+) and one-shot `tap_screen` from a fresh screenshot, each requiring native approval. Every UI-changing action is followed by a runtime-enforced fresh screen observation before the Agent may continue or claim success |
+| Automatic navigation | Opt-in; ordinary operations skip repeated confirmation only when enabled. Native English/Persian sensitive-action classification checks visible labels, resource IDs, hints, classes and nearby ancestors; sensitive/ambiguous clicks still prompt. This heuristic is not exhaustive. Screenshot capture and every visual tap always prompt separately |
 | Voice | Manual Gemini dictation remains review-before-send. Optional Pocket Code wake phrase uses Android on-device Persian recognition while the app is foreground; after a beep, VAD-bounded audio is sent to Gemini and the transcript is auto-submitted to the existing agent loop. |
 | Task planning | Local `set_task_plan` / `update_task_step` / `resume_task` / `finish_task` tools; progress panel; 2–10 bounded steps; task state stored per chat session |
 | Persistence | Chat sessions and compact task memory in WebView localStorage; credentials encrypted via Android Keystore |

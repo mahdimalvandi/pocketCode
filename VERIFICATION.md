@@ -1,5 +1,14 @@
 # Verification log
 
+## v0.14.0 candidate / Accessibility target diagnostics and action safety
+
+- Clickable-ancestor lookup now traverses up to sixteen parent levels. A successful click returns only the resolved view class and ancestor depth as diagnostic metadata; no message text or raw path is added to persistent logs.
+- Approval text now includes the bounded intended click effect, nearby non-password UI context, and exact text proposed for a field replacement. Context preview is bounded to eight levels and 1,200 characters.
+- Added native English/Persian sensitive-action classification across labels, descriptions, resource IDs, view classes, hints and up to three parent nodes. The heuristic is not exhaustive; a model flag cannot downgrade a native match.
+- Updated model tool descriptions, navigation policy, app onboarding and Android Accessibility disclosure to match the same consent rule.
+- Added JVM test cases for sensitive-action labels. **Not run, not built and not device-tested by request.** No Actions run. Actual Telegram reproduction, custom icon-only controls, confirmation preview behavior, Java tests and all UI/device validation remain pending.
+
+
 ## v0.13.0 candidate / persistent stop control
 
 - Added a chat-header stop button that appears during an active Agent run. Stop requests immediately update WebView run state and block subsequent model/tool operation starts at the loop boundaries, including later members of a read batch.

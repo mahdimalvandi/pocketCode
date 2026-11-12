@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.14.0 (candidate)
+- Expanded clickable-ancestor resolution from six to sixteen parent levels and returned privacy-safe target class/depth metadata after a click, so deeply nested result rows can be diagnosed without logging message text.
+- Approval previews now show the intended click reason, nearby non-password context and the exact replacement text for `type_text`; the preview is narrower and bounded.
+- Added native English/Persian sensitive-action classification across labels, resource IDs, hints, classes and up to three ancestors. Model flags can add risk but cannot remove native risk.
+- Aligned the model prompt, tool descriptions, Android onboarding and Accessibility disclosure on the automatic-navigation and sensitive-action rules. Detection remains heuristic, not a guarantee.
+- Added JVM tests for classifier examples. **Not run or built; physical Telegram reproduction and sensitive-control checks remain pending** for the final device test cycle.
+
 ## 0.13.0 (candidate)
 - Added a persistent stop button to the chat header while the Agent is running.
 - Added a per-run stop state checked at model and tool-operation boundaries; new model/tool operations and later members of a batched read sequence are not started after a stop request.
