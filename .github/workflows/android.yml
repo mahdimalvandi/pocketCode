@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths:
       - 'app/src/main/java/dev/pocketcode/app/MainActivity.java'
+      - 'app/src/main/java/dev/pocketcode/app/PhoneAccessService.java'
       - 'app/src/main/java/dev/pocketcode/app/OperationReceipt*.java'
       - 'app/src/main/assets/app.js'
       - 'app/src/main/res/values/strings.xml'

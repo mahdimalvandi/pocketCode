@@ -205,7 +205,7 @@ public final class PhoneAccessService extends AccessibilityService {
                 if(context!=null){StringBuilder preview=new StringBuilder();screenPreview(context,preview,0);context.recycle();detail+="\nNearby visible context / draft:\n"+preview;}
             } else if(action.equals("type_text")){
                 String proposed=payload.optString("text","");
-                if(proposed.length()>2000)throw new Exception("Text exceeds 2000 characters.");
+                if(proposed.length()>2000){finish(null,"Text exceeds 2000 characters.");return;}
                 detail+="\nProposed field text:\n"+proposed;
             }
             String disclosure = action.equals("capture_screen")
