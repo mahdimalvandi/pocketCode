@@ -1,5 +1,12 @@
 # Verification log
 
+## v0.16.0 candidate / exact shared-storage root navigation
+
+- `PhoneFiles.list` now returns `currentPath`, the canonical matched `rootPath`, `isRoot` and exact `parentPath` (JSON null at the volume root). The model is instructed to use `parentPath` verbatim and never infer parent paths from path depth or string trimming.
+- `StoragePathNavigator` selects the longest valid canonical root match. Parent resolution rejects paths outside that root, including sibling paths that merely share a textual prefix; it stops at each volume root.
+- Added JVM cases for removable volumes, overlapping roots, exact parents, root boundaries and traversal rejection. **Not run, not built or device-tested by request.** Physical removable-volume access, OEM filesystem behavior, symlinks and revocation remain pending.
+
+
 ## v0.15.0 candidate / wake reliability and Persian transcription validation
 
 - Wake-listener retry behavior now distinguishes normal `ERROR_NO_MATCH`/`ERROR_SPEECH_TIMEOUT` from recognizer/service failures. Repeated failures use bounded backoff and stop after eight consecutive failures; unsupported on-device Persian language remains an explicit stop condition.

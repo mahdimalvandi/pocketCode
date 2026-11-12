@@ -32,8 +32,9 @@ final class PhoneFiles {
     private File resolve(String path) throws Exception {
         if(path.isEmpty()||path.indexOf('\0')>=0||path.length()>4096)throw new Exception("Invalid storage path.");
         File file=new File(path).getCanonicalFile();
-        for(File root:roots){String base=root.getPath();if(file.equals(root)||file.getPath().startsWith(base+"/"))return file;}
-        throw new Exception("Only shared storage volumes are accessible, not system or app-private storage.");
+        if(StoragePathNavigator.findRoot(file,roots)==null)
+            throw new Exception("Only shared storage volumes are accessible, not system or app-private storage.");
+        return file;
     }
     JSONObject list(String path,int offset) throws Exception {
         File folder=resolve(path);if(!folder.isDirectory())throw new Exception("Folder unavailable or protected by Android.");
@@ -46,7 +47,11 @@ final class PhoneFiles {
             try { resolve(f.getPath()); } catch(Exception denied){continue;}
             items.put(new JSONObject().put("name",f.getName()).put("path",f.getPath()).put("directory",f.isDirectory()).put("size",f.length()));
         }
-        return new JSONObject().put("entries",items).put("total",files.length).put("nextOffset",end<files.length?end:-1);
+        File root=StoragePathNavigator.findRoot(folder,roots);
+        File parent=StoragePathNavigator.parentWithinRoot(folder,root);
+        return new JSONObject().put("entries",items).put("total",files.length).put("nextOffset",end<files.length?end:-1)
+                .put("currentPath",folder.getPath()).put("rootPath",root.getPath())
+                .put("isRoot",parent==null).put("parentPath",parent==null?JSONObject.NULL:parent.getPath());
     }
     JSONObject read(String path) throws Exception {
         File file=resolve(path);if(!file.isFile())throw new Exception("File unavailable or protected by Android.");

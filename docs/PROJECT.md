@@ -4,7 +4,7 @@
 Pocket Code is a personal Android coding/phone assistant inspired by OpenCode's quiet dark interface. Tools run on the phone. AI inference runs remotely through an existing 9Router endpoint. It is not an official OpenCode client or a full port.
 
 ## Current release
-0.15.0 source candidate, code 15; Android 8+ (minSdk 26), compile/target SDK 35; SDK-only Java native host and bundled Persian RTL web interface. The checked-in `dist/pocket-code-debug.apk` remains the older 0.5.0 build until the next batched build and verification.
+0.16.0 source candidate, code 16; Android 8+ (minSdk 26), compile/target SDK 35; SDK-only Java native host and bundled Persian RTL web interface. The checked-in `dist/pocket-code-debug.apk` remains the older 0.5.0 build until the next batched build and verification.
 
 ## User requirements and implemented behavior
 | Area | Current behavior |
@@ -13,7 +13,7 @@ Pocket Code is a personal Android coding/phone assistant inspired by OpenCode's 
 | Default model | `ag/gemini-3.8-flash-high`; configured provider alias, not a claim about official model naming |
 | Workspace | App-private UTF-8 text files; list/read/create/overwrite/delete; mutations require native approval |
 | Selected phone folder | Android SAF tree chosen by user; read/list/write; overwrite confirmation; no guaranteed atomic writes |
-| Broad phone reading | One-time app consent plus OS all-files/legacy permission; read-only adapter; discover roots, list 200 entries/page, read UTF-8 up to 512 KB |
+| Broad phone reading | One-time app consent plus OS all-files/legacy permission; read-only adapter; discover exact volume roots, list 200 entries/page with canonical parentPath/rootPath metadata, read UTF-8 up to 512 KB |
 | App control | Accessibility screen text, fresh element IDs, click with up-to-16-level clickable-ancestor resolution, text entry with an exact replacement-text confirmation preview, scroll, back; launcher discovery/open. On-demand screenshot fallback (API 30+) and one-shot `tap_screen` from a fresh screenshot, each requiring native approval. Every UI-changing action is followed by a runtime-enforced fresh screen observation before the Agent may continue or claim success |
 | Automatic navigation | Opt-in; ordinary operations skip repeated confirmation only when enabled. Native English/Persian sensitive-action classification checks visible labels, resource IDs, hints, classes and nearby ancestors; sensitive/ambiguous clicks still prompt. This heuristic is not exhaustive. Screenshot capture and every visual tap always prompt separately |
 | Voice | Manual Gemini dictation remains review-before-send. Optional Pocket Code wake phrase uses Android on-device Persian recognition while the app is foreground; after a beep, VAD-bounded audio is sent to the selected Gemini model through 9Router and the transcript is submitted to the existing agent loop. Expected no-match/time-out results restart listening; repeated recognizer failures back off and stop after eight consecutive failures. Wake phrase matching uses word boundaries. Manual recording and wake listening share an explicit native microphone guard. Recorded WAV headers and 9Router transcript response shapes are validated; malformed or empty results are surfaced as errors without switching to a different ASR provider. Physical-device accuracy remains unverified. |
