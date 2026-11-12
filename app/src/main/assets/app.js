@@ -369,16 +369,30 @@ function markReceiptObservation(runtime,toolName){
   const receipt=runtime.pendingOperationReceipts.find(item=>reliability.isReceiptObservationFor(item.action,toolName));
   if(receipt)runtime.receiptObservationReady.add(receipt.operationId);
 }
+async function refreshStartedReceipts(runtime){
+  if(!runtime.pendingOperationReceipts.some(item=>item.state==='started'))return;
+  const latest=await bridge('listPendingOperationReceipts');
+  runtime.pendingOperationReceipts=Array.isArray(latest)?latest:[];
+}
 async function runTool(call,runtime,timelineEventId=null){
   const args=call.args||{};
   const operationId=call.operationId||null;
   const observer=reliability.isObservationTool(call.name);
   if(reliability.requiresOperationReceipt(call.name)&&(!operationId||!runtime.receiptStoreAvailable))
     return {error:'This side-effecting operation has no durable native receipt ID or the receipt store is unavailable. It was blocked before execution.'};
-  const pendingReceipt=runtime.pendingOperationReceipts.find(item=>['started','unknown','completed'].includes(item.state));
+  let pendingReceipt=runtime.pendingOperationReceipts.find(item=>['started','unknown','completed'].includes(item.state));
+  if(pendingReceipt?.state==='started'){
+    try{
+      await refreshStartedReceipts(runtime);
+      pendingReceipt=runtime.pendingOperationReceipts.find(item=>['started','unknown','completed'].includes(item.state));
+    }catch(e){
+      runtime.receiptStoreAvailable=false;
+      return {error:'The native operation status could not be refreshed. No side-effecting action was run; reopen the app and inspect pending operations.'};
+    }
+  }
   if(pendingReceipt){
     if(pendingReceipt.state==='started')
-      return {error:'A previous native operation is still in progress. Do not issue more phone or file actions; wait for its native dialog/result, then inspect the current state.'};
+      return {error:'A native operation is still in progress or awaiting its native confirmation. Do not repeat it. Finish or dismiss that native dialog, then continue with a fresh screen observation.'};
     if(call.name!=='resolve_operation_receipt'&&!reliability.isReceiptObservationFor(pendingReceipt.action,call.name))
       return {error:'A native operation receipt is unresolved. Only inspect its matching current screen or exact file target, then call resolve_operation_receipt. No other operation may run.'};
   }
