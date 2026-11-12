@@ -1,7 +1,7 @@
 # Agent handoff / next work
 
 ## Start here
-Current main includes the v0.13.0 persistent stop control, v0.14.0 Accessibility/action-safety improvements and v0.15.0 voice-wake/transcription hardening. The v0.16.0 candidate adds exact shared-storage parent/root metadata and navigation boundaries. Source changes remain unbuilt and untested; the checked-in APK is still v0.5.0.
+Current main includes the v0.13.0 persistent stop control, v0.14.0 Accessibility/action-safety improvements, v0.15.0 voice-wake/transcription hardening and v0.16.0 exact storage-root navigation. The v0.17.0 candidate adds SHA-256 and provenance output to local/manual-CI builds. Source changes remain unbuilt and untested; the checked-in APK is still v0.5.0.
 
 ## Delivered and verified
 - APK compiled/signed with the original local personal debug key.
@@ -58,7 +58,7 @@ Current main includes the v0.13.0 persistent stop control, v0.14.0 Accessibility
 5. **Prompt/disclosure consistency:** the authoritative rule is now aligned in the model prompt, tool descriptions, native onboarding and Accessibility service text. Verify disclosures match actual native behavior; do not weaken native enforcement.
 6. **Stop UX:** v0.13.0 adds a persistent in-run control and operation-boundary gating. Feature implementation is merged; validation only remains. It cannot reliably interrupt an in-flight native operation or roll back side effects.
 7. **Storage navigation:** code now returns exact current/root/parent paths and prevents traversal above the matched volume root. Validate internal storage, removable SD/USB volumes, empty directories, pagination, revoked permission, symlinks and boundary/traversal paths on physical devices.
-8. **Tests and release engineering:** add unit/instrumentation coverage, stable signing/release process, license decision and artifact checksums. CI signer differs from personal installed signer.
+8. **Tests and release engineering:** JVM unit cases now cover the new classifier, wake matcher/WAV validation and storage-root navigator; the workflow remains manual-only and emits verified SHA-256/provenance artifacts. Still run the full JS/JVM/lint/build/device matrix once at the end, compare the personal APK signing certificate before upgrading, and make an owner decision on the repository license. No instrumentation tests or production signing identity have been introduced. CI signer differs from the personal installed signer.
 
 ## Known constraints to preserve
 No root/private-app filesystem access, direct Telegram API, shell/runtime or robust background service. Broad adapter stays read-only; selected-folder writes keep native approval. File text reader supports strict UTF-8 ≤512 KB; PDF/image parsing is not implemented. Model replies are not streamed. No sensitive data should enter Git history.

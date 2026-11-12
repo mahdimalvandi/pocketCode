@@ -1,6 +1,10 @@
 # Pocket Code · Android alpha
 
-**Current source candidate: 0.16.0 (personal-testing alpha).** This candidate makes shared-storage parent navigation use the exact discovered volume root, including removable volumes. It has not been built, run through the automated test suite, or device-tested yet. The checked-in APK remains the older 0.5.0 build until a batched build and validation. Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
+**Current source candidate: 0.17.0 (personal-testing alpha).** This candidate adds SHA-256 and source-provenance files to local and manual CI APK builds; it keeps local and CI signing identities separate. It has not been built, run through the automated test suite, or device-tested yet. The checked-in APK remains the older 0.5.0 build until a batched build and validation. Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
+
+## v0.17.0 candidate: release integrity
+
+The local SDK build now creates and verifies a SHA-256 checksum and a provenance file alongside the APK. The manual-only GitHub Actions workflow does the same for its CI-signed artifact. These files establish artifact integrity and identify the source revision; they do not make a debug APK a production release. The CI signing key differs from the personal local key, so a CI APK may not update an installed personal build. The checked-in APK remains v0.5.0 until a later batched build and device validation. No license has been selected by the repository owner.
 
 ## v0.16.0 candidate: exact storage-root navigation
 

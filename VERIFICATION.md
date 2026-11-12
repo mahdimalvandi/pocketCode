@@ -1,5 +1,14 @@
 # Verification log
 
+## v0.17.0 candidate / release integrity and signing provenance
+
+- The SDK-only local build now generates a SHA-256 file and verifies it with `sha256sum --check`. It also records application ID, version code/name, source revision (or `unknown` outside Git) and APK SHA-256 in a provenance text file.
+- The manual-only GitHub Actions workflow generates and checks the same metadata for its CI APK and uploads the APK, checksum and provenance together. The workflow was not dispatched.
+- The local debug keystore is Git-ignored and gets restrictive file permissions. Personal local signing and CI debug signing remain separate; the CI APK is not assumed to be an in-place upgrade.
+- No `LICENSE` file or production signing identity was added because those are owner decisions.
+- **Not run, not built and not device-tested by request.** No v0.17.0 APK or checksum exists yet; the tracked APK remains v0.5.0. Full automated and physical-device verification remains pending.
+
+
 ## v0.16.0 candidate / exact shared-storage root navigation
 
 - `PhoneFiles.list` now returns `currentPath`, the canonical matched `rootPath`, `isRoot` and exact `parentPath` (JSON null at the volume root). The model is instructed to use `parentPath` verbatim and never infer parent paths from path depth or string trimming.

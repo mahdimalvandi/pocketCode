@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.17.0 (candidate)
+- Local SDK builds now restrict the generated debug keystore to the current user and produce a verified SHA-256 checksum plus provenance metadata (package, version, source revision and APK hash).
+- The manual-only GitHub Actions workflow now generates and verifies matching checksum/provenance files and uploads them beside the CI APK. The workflow remains `workflow_dispatch` only; no automatic build was triggered.
+- Updated release instructions to distinguish personal and CI debug signatures, preserve the private local key, verify artifact hashes and leave the repository license choice to the owner. No `LICENSE` file was added.
+- **No build, tests, lint or GitHub Actions were run by request.** The committed APK remains v0.5.0; this candidate does not yet have a generated v0.17.0 APK or checksum.
+
 ## 0.16.0 (candidate)
 - Broad shared-storage directory listings now return the exact `currentPath`, matched `rootPath`, `isRoot` state and canonical `parentPath`. Parent navigation stops at each volume root, including removable volumes.
 - Added a root navigator that chooses the longest valid canonical root match and rejects sibling-prefix and traversal paths outside the selected volume.
