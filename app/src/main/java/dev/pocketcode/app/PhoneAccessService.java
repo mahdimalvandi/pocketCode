@@ -55,22 +55,44 @@ public final class PhoneAccessService extends AccessibilityService {
         }
     }
     private boolean automatic() { return getSharedPreferences("secure_settings",MODE_PRIVATE).getBoolean("automaticNavigation",false); }
+    private static final int MAX_CLICKABLE_ANCESTOR_DEPTH = 16;
+    private static final class ClickTarget {
+        final AccessibilityNodeInfo node;
+        final int depth;
+        ClickTarget(AccessibilityNodeInfo node,int depth){this.node=node;this.depth=depth;}
+    }
     private String label(AccessibilityNodeInfo n) {
-        return (String.valueOf(n.getText())+" "+String.valueOf(n.getContentDescription())+" "+String.valueOf(n.getViewIdResourceName())).toLowerCase(java.util.Locale.ROOT);
+        if(n==null)return "";
+        return (String.valueOf(n.getText())+" "+String.valueOf(n.getContentDescription())+" "
+                +String.valueOf(n.getViewIdResourceName())+" "+String.valueOf(n.getClassName())+" "
+                +String.valueOf(n.getHintText())).toLowerCase(java.util.Locale.ROOT);
     }
     private boolean sensitive(AccessibilityNodeInfo n, JSONObject p) {
         if(p.optBoolean("sensitive",false))return true;
-        String s=label(n);
-        return s.matches("(?s).*(send|submit|delete|remove|clear|pay|purchase|buy|transfer|confirm|logout|sign.out|block|report|permission|ارسال|حذف|پاک|پرداخت|خرید|انتقال|تأیید|تایید|مسدود|گزارش|خروج).*");
+        if(n==null)return false;
+        StringBuilder context=new StringBuilder();
+        AccessibilityNodeInfo current=AccessibilityNodeInfo.obtain(n);
+        for(int depth=0;current!=null&&depth<4;depth++){
+            context.append(label(current)).append(' ');
+            AccessibilityNodeInfo parent=current.getParent();
+            current.recycle();
+            current=parent;
+        }
+        if(current!=null)current.recycle();
+        return SensitiveActionClassifier.requiresApproval(context.toString());
     }
-    private AccessibilityNodeInfo clickTarget(AccessibilityNodeInfo node) {
+    private ClickTarget clickTarget(AccessibilityNodeInfo node) {
+        if(node==null)return null;
         AccessibilityNodeInfo current=AccessibilityNodeInfo.obtain(node);
-        for(int i=0;i<6;i++){
-            if(current.isClickable()&&current.isEnabled())return current;
-            AccessibilityNodeInfo parent=current.getParent();current.recycle();current=parent;
+        for(int depth=0;depth<=MAX_CLICKABLE_ANCESTOR_DEPTH;depth++){
+            if(current.isClickable()&&current.isEnabled())return new ClickTarget(current,depth);
+            AccessibilityNodeInfo parent=current.getParent();
+            current.recycle();
+            current=parent;
             if(current==null)return null;
         }
-        current.recycle();return null;
+        current.recycle();
+        return null;
     }
     public void stopAutomation() {
         main.post(()->{if(approval!=null)approval.dismiss();latestScreenshot=null;finish(null,"Automation stopped by user.");clearNodes();snapshotPackage="";});
@@ -149,17 +171,30 @@ public final class PhoneAccessService extends AccessibilityService {
             boolean needsApproval=action.equals("capture_screen") || action.equals("tap_screen") || !automatic();
             if(action.equals("click_element")){
                 AccessibilityNodeInfo source=nodes.get(payload.optString("elementId"));
-                AccessibilityNodeInfo target=source==null?null:clickTarget(source);
+                ClickTarget target=source==null?null:clickTarget(source);
                 // Unknown/unlabelled targets are never automatically activated.
-                needsApproval|=target==null || sensitive(source,payload) || (target!=null&&sensitive(target,payload))
-                    || (source!=null&&String.valueOf(source.getText()).equals("null")&&String.valueOf(source.getContentDescription()).equals("null"));
-                if(target!=null){detail+="\nResolved control: "+label(target);target.recycle();}
+                needsApproval|=target==null || sensitive(source,payload) || (target!=null&&sensitive(target.node,payload))
+                    || (source!=null&&source.getText()==null&&source.getContentDescription()==null);
+                if(target!=null){
+                    detail+="\nResolved control: "+label(target.node)
+                            +"\nClickable ancestor depth: "+target.depth
+                            +"\nControl class: "+String.valueOf(target.node.getClassName());
+                    target.node.recycle();
+                }
             }
             if(payload.optBoolean("sensitive",false))needsApproval=true;
             if(!needsApproval){try{finish(execute(action,payload,false),null);}catch(Exception e){finish(null,e.getMessage());}return;}
             if(action.equals("click_element")){
-                AccessibilityNodeInfo context=getRootInActiveWindow();
-                if(context!=null){StringBuilder preview=new StringBuilder();screenPreview(context,preview,0);context.recycle();detail+="\nVisible context / draft:\n"+preview;}
+                String intent=payload.optString("reason","");
+                detail+="\nRequested intent: "+intent.substring(0,Math.min(180,intent.length()));
+                AccessibilityNodeInfo source=nodes.get(payload.optString("elementId"));
+                AccessibilityNodeInfo context=source==null?null:source.getParent();
+                if(context==null&&source!=null)context=AccessibilityNodeInfo.obtain(source);
+                if(context!=null){StringBuilder preview=new StringBuilder();screenPreview(context,preview,0);context.recycle();detail+="\nNearby visible context / draft:\n"+preview;}
+            } else if(action.equals("type_text")){
+                String proposed=payload.optString("text","");
+                if(proposed.length()>2000)throw new Exception("Text exceeds 2000 characters.");
+                detail+="\nProposed field text:\n"+proposed;
             }
             String disclosure = action.equals("capture_screen")
                     ? "با تأیید، تصویر فعلی صفحه به‌صورت JPEG از طریق 9Router به مدل انتخاب‌شده ارسال می‌شود. تصویر فقط برای همین اجرای Agent در حافظه نگه داشته می‌شود و در تاریخچهٔ ذخیره‌شده یا فایل گوشی ذخیره نمی‌شود. ممکن است اعلان‌ها یا اطلاعات خصوصی قابل مشاهده در تصویر باشند؛ صفحه‌های حساس را ثبت نکن."
@@ -403,13 +438,18 @@ public final class PhoneAccessService extends AccessibilityService {
             AccessibilityNodeInfo probe = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
             if (probe != null) { boolean secret = probe.isPassword(); probe.recycle(); if(secret)throw new Exception("Password input is protected."); }
             boolean ok;
+            String resolvedTargetClass=null;
+            int clickableAncestorDepth=-1;
             if (action.equals("click_element")) {
-                AccessibilityNodeInfo target=clickTarget(node);
-                if(target==null)throw new Exception("No clickable ancestor is exposed. If the visible control is harmless but missing from Accessibility, use capture_screen, then tap_screen with the fresh screenshotId and explicit approval.");
-                try { if(!String.valueOf(target.getPackageName()).equals(pkg))throw new Exception("Target app changed.");
-                    if(!approved&&(sensitive(node,p)||sensitive(target,p)))throw new Exception("Control became sensitive. Request again for approval.");
-                    ok=target.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                } finally {target.recycle();}
+                ClickTarget target=clickTarget(node);
+                if(target==null)throw new Exception("No clickable ancestor is exposed within "+MAX_CLICKABLE_ANCESTOR_DEPTH+" parent levels. The visible UI may not expose a usable Accessibility action; capture a fresh screen/tree and inspect the target before trying another method.");
+                try {
+                    if(!String.valueOf(target.node.getPackageName()).equals(pkg))throw new Exception("Target app changed.");
+                    if(!approved&&(sensitive(node,p)||sensitive(target.node,p)))throw new Exception("Control became sensitive. Request again for approval.");
+                    resolvedTargetClass=String.valueOf(target.node.getClassName());
+                    clickableAncestorDepth=target.depth;
+                    ok=target.node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                } finally {target.node.recycle();}
             } else if(action.equals("type_text")) {
                 if(!node.isEditable())throw new Exception("Element is not an editable text field.");
                 String text=p.getString("text"); if(text.length()>2000)throw new Exception("Text exceeds 2000 characters.");
@@ -421,7 +461,12 @@ public final class PhoneAccessService extends AccessibilityService {
                 ok=node.performAction(p.optBoolean("backward")?AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD:AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
             } else throw new Exception("Unsupported phone action.");
             clearNodes(); snapshotPackage="";
-            return new JSONObject().put("ok",ok).put("note","Action requested; read the screen to verify the outcome.");
+            JSONObject response=new JSONObject().put("ok",ok).put("note","Action requested; read the screen to verify the outcome.");
+            if(action.equals("click_element")){
+                response.put("resolvedTargetClass",resolvedTargetClass==null?"":resolvedTargetClass);
+                response.put("clickableAncestorDepth",clickableAncestorDepth);
+            }
+            return response;
         } finally { root.recycle(); }
     }
     private String fingerprint(AccessibilityNodeInfo node) {
@@ -430,9 +475,10 @@ public final class PhoneAccessService extends AccessibilityService {
             +String.valueOf(node.getText())+"|"+String.valueOf(node.getContentDescription())+"|"+bounds.toShortString();
     }
     private void screenPreview(AccessibilityNodeInfo node,StringBuilder out,int depth){
-        if(depth>24||out.length()>2400||node.isPassword()||!node.isVisibleToUser())return;
-        if(node.getText()!=null)out.append(node.getText().toString().substring(0,Math.min(400,node.getText().length()))).append('\n');
-        for(int i=0;i<node.getChildCount()&&out.length()<2400;i++){
+        if(depth>8||out.length()>1200||node.isPassword()||!node.isVisibleToUser())return;
+        if(node.getText()!=null)out.append(node.getText().toString(),0,Math.min(240,node.getText().length())).append('\n');
+        if(node.getContentDescription()!=null)out.append(node.getContentDescription().toString(),0,Math.min(160,node.getContentDescription().length())).append('\n');
+        for(int i=0;i<node.getChildCount()&&out.length()<1200;i++){
             AccessibilityNodeInfo child=node.getChild(i);if(child!=null){try{screenPreview(child,out,depth+1);}finally{child.recycle();}}
         }
     }
@@ -442,7 +488,7 @@ public final class PhoneAccessService extends AccessibilityService {
         String description=node.getContentDescription()==null?"":node.getContentDescription().toString();
         if(!text.isEmpty() || !description.isEmpty() || node.isClickable() || node.isEditable() || node.isScrollable()) {
             String id=epoch+":"+out.length();nodes.put(id,AccessibilityNodeInfo.obtain(node));
-            AccessibilityNodeInfo target=clickTarget(node);boolean clickable=target!=null;if(target!=null)target.recycle();
+            ClickTarget target=clickTarget(node);boolean clickable=target!=null;if(target!=null)target.node.recycle();
             out.put(new JSONObject().put("id",id).put("text",text.substring(0,Math.min(600,text.length())))
                 .put("description",description.substring(0,Math.min(300,description.length())))
                 .put("clickable",clickable).put("directClickable",node.isClickable()).put("viewId",String.valueOf(node.getViewIdResourceName())).put("editable",node.isEditable()).put("scrollable",node.isScrollable()));

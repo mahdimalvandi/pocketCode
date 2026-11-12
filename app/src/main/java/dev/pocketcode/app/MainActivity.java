@@ -319,7 +319,7 @@ public final class MainActivity extends Activity {
                 preferences.edit().remove("sharedTree").commit();result=new JSONObject().put("ok",true);break;
             }
             case "accessibilitySettings":
-                confirm(message,"فعال‌سازی کنترل گوشی", "این دسترسی حساس است. متن صفحه می‌تواند از طریق 9Router به مدل ارسال شود. در حالت کنترل خودکار، کارهای معمولی بدون پرسش انجام می‌شوند. روی صفحات حساس استفاده نکن. پس از پایان، سرویس را خاموش کن.", () -> {
+                confirm(message,"فعال‌سازی کنترل گوشی", "این دسترسی حساس است. متن صفحه می‌تواند از طریق 9Router به مدل ارسال شود. وقتی کنترل خودکار را خودت فعال کرده‌ای، پیمایش و کلیک‌های معمولی ممکن است بدون تأیید جداگانه انجام شوند؛ کلیک‌های حساس یا نامشخص باید در اندروید تأیید شوند. تشخیص حساسیت از متن و شناسه‌های رابط استفاده می‌کند و کامل نیست؛ قبل از فعال‌سازی، صفحه‌های بانکی، پرداخت، احراز هویت و اطلاعات خصوصی را ببند. برای ارسال، حذف، پرداخت و تغییرات برگشت‌ناپذیر همیشه پیش‌نمایش را بررسی و تأیید کن. پس از پایان، سرویس را خاموش کن.", () -> {
                     startActivity(new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS));respond(message,new JSONObject().put("ok",true),null);
                 });return;
             case "listShared":

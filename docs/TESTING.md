@@ -67,7 +67,7 @@ Execution timeline mock checks:
 | Recovery engine | User denial is terminal; permission needs user action; blocked target stops; stale IDs require fresh reads; unavailable controls require re-observation; only transient broad-storage reads retry once; no side-effect replay |
 | Visual tap | `canPerformGestures` registration; exact x/y mapping on multiple DPIs/rotations; reject status/navigation bars and points outside app bounds; stale/wrong screenshotId, expired token, changed package/window/bounds; sensitive English/Persian label rejection; approval denial; gesture cancelled/refused; verify one tap only and fresh-screen verification |
 | Telegram | Open, search contact, click result's ancestor, verify chat header, type draft, cancel send approval, approve disposable send only |
-| Sensitive effects | English/Persian send/delete/payment labels; unlabelled control; model false-negative flag; changed target |
+| Sensitive effects | English/Persian send/delete/payment/share/publish labels; resource-ID and hint semantics; parent-container labels; unlabelled control; model false-negative flag; changed target; exact replacement-text preview |
 | Stop | Stop during model request, pending overlay and between actions; no next action; no undo claim |
 | Audio | Permission denial, 1–60 seconds Persian/English, silence/noise, cancel, pause/background, rotation, router timeout |
 | Lifecycle | Screen lock, app switch, process death; no claim of reliable background automation |

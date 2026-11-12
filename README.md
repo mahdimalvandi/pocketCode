@@ -1,6 +1,10 @@
 # Pocket Code · Android alpha
 
-**Current source candidate: 0.13.0 (personal-testing alpha).** This candidate adds a persistent in-run stop control. It has not been built, run through the automated test suite, or device-tested yet. The checked-in APK remains the older 0.5.0 build until a batched build and validation. Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
+**Current source candidate: 0.14.0 (personal-testing alpha).** This candidate improves nested Accessibility click resolution, native sensitive-action classification and approval previews. It has not been built, run through the automated test suite, or device-tested yet. The checked-in APK remains the older 0.5.0 build until a batched build and validation. Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
+
+## v0.14.0 candidate: Accessibility and action safety
+
+Clickable-ancestor lookup now checks up to sixteen parent levels and returns only target class/depth metadata. Approval previews show the intended effect, nearby visible context and exact replacement text. Native sensitive-action checks use English/Persian semantics and Android control metadata; they remain heuristic and cannot guarantee detection of every custom control.
 
 ## v0.13.0 candidate: persistent stop control
 
