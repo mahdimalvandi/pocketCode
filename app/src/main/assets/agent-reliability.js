@@ -12,9 +12,26 @@
   // These broad-storage calls do not open per-operation approval dialogs.
   const SAFE_READ_TOOLS = new Set(['phone_storage_roots', 'list_phone_storage', 'read_phone_storage']);
   const FILE_MUTATION_TOOLS = new Set(['write_file', 'write_phone_file', 'delete_file']);
+  const RECEIPT_REQUIRED_TOOLS = new Set([
+    'open_app', 'click_element', 'type_text', 'scroll_element', 'phone_back', 'tap_screen',
+    'write_file', 'write_phone_file', 'delete_file'
+  ]);
 
   function requiresVerification(toolName) {
     return UI_MUTATING_TOOLS.has(String(toolName || ''));
+  }
+
+  function requiresOperationReceipt(toolName) {
+    return RECEIPT_REQUIRED_TOOLS.has(String(toolName || ''));
+  }
+
+  function isReceiptObservationFor(nativeAction, toolName) {
+    const action=String(nativeAction||'');
+    const name=String(toolName||'');
+    if(action==='writeFile')return name==='read_file';
+    if(action==='deleteFile')return name==='list_files';
+    if(action==='writeShared')return name==='read_phone_file';
+    return OBSERVATION_TOOLS.has(name);
   }
 
   function isObservationTool(toolName) {
@@ -60,7 +77,11 @@
     let nextStep = 'Inspect the current state and explain the failure. Do not repeat the same operation blindly.';
     let userActionRequired = false;
 
-    if (/user denied|denied this|operation cancelled|operation canceled|user cancelled|user canceled|رد شد|لغو شد|لغو کرد/.test(normalized)) {
+    if (/duplicate operation suppressed|operation id conflict|receipt state|operation receipt/.test(normalized)) {
+      category = 'outcome_unknown';
+      nextStep = 'Never replay this operation. Inspect the matching current screen or exact file target, then resolve its native receipt; ask the user when evidence is insufficient.';
+      userActionRequired = true;
+    } else if (/user denied|denied this|operation cancelled|operation canceled|user cancelled|user canceled|رد شد|لغو شد|لغو کرد/.test(normalized)) {
       category = 'user_denied';
       nextStep = 'Respect the denial. Do not ask for the same approval again unless the user explicitly requests it.';
       userActionRequired = true;
@@ -91,7 +112,7 @@
       userActionRequired,
       automaticRetryAllowed,
       retryPolicy: automaticRetryAllowed ? 'safe_once' : 'never',
-      outcomeMayBeUnknown: sideEffecting && (category === 'transient_failure' || category === 'unknown'),
+      outcomeMayBeUnknown: sideEffecting && (category === 'transient_failure' || category === 'unknown' || category === 'outcome_unknown'),
       neverRepeatBlindly: sideEffecting || category === 'user_denied' || category === 'blocked_target'
     };
   }
@@ -106,5 +127,5 @@
     };
   }
 
-  return Object.freeze({requiresVerification, isObservationTool, allowedDuringVerification, blockedAfterUnverified, expectedOutcome, classifyFailure, createVerification});
+  return Object.freeze({requiresVerification, requiresOperationReceipt, isReceiptObservationFor, isObservationTool, allowedDuringVerification, blockedAfterUnverified, expectedOutcome, classifyFailure, createVerification});
 });

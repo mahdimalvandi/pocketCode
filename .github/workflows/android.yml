@@ -2,6 +2,19 @@ name: Build Android APK
 # Run manually after batching several substantial changes.
 on:
   workflow_dispatch:
+  # One batched validation run for the idempotent-receipt feature.
+  # Keep this path filter narrow so unrelated feature commits do not build automatically.
+  push:
+    branches: [main]
+    paths:
+      - 'app/src/main/java/dev/pocketcode/app/MainActivity.java'
+      - 'app/src/main/java/dev/pocketcode/app/OperationReceipt*.java'
+      - 'app/src/main/assets/app.js'
+      - 'app/src/main/assets/agent-reliability.js'
+      - 'app/src/test/java/dev/pocketcode/app/OperationReceiptPolicyTest.java'
+      - 'app/src/test/js/agent-reliability.test.js'
+      - 'app/build.gradle'
+      - 'build-apk.sh'
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -41,7 +54,7 @@ jobs:
         run: |
           APK=app/build/outputs/apk/debug/app-debug.apk
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$APK"
-          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -F "package: name='dev.pocketcode.app' versionCode='18' versionName='0.18.0'"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -F "package: name='dev.pocketcode.app' versionCode='19' versionName='0.19.0'"
           unzip -t "$APK"
           (
             cd "$(dirname "$APK")"
@@ -50,8 +63,8 @@ jobs:
           )
           {
             echo "applicationId=dev.pocketcode.app"
-            echo "versionCode=18"
-            echo "versionName=0.18.0"
+            echo "versionCode=19"
+            echo "versionName=0.19.0"
             echo "sourceRevision=$(git rev-parse HEAD)"
             echo "apkSha256=$(sha256sum "$APK" | awk '{print $1}')"
           } > "$APK.provenance.txt"

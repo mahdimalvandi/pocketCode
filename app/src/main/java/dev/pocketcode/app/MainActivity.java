@@ -64,6 +64,7 @@ public final class MainActivity extends Activity {
     private static final String DEFAULT_MODEL = "ag/gemini-3.8-flash-high";
     private static final String DEFAULT_BASE = "https://malvandi.founderos.ir/v1";
     private static final String KEY_ALIAS = "pocket_code_api_key_v1";
+    private static final String PROCESS_EPOCH = java.util.UUID.randomUUID().toString();
     private static final int FILE_LIMIT = 512 * 1024;
     private static final int REQUEST_LIMIT = 4 * 1024 * 1024;
     private static final int RESPONSE_LIMIT = 4 * 1024 * 1024;
@@ -75,6 +76,7 @@ public final class MainActivity extends Activity {
     private WebView webView;
     private File workspace;
     private SharedPreferences preferences;
+    private OperationReceiptStore operationReceipts;
     private JSONObject pendingImport, pendingExport, pendingVoice;
     private byte[] exportBytes;
     private JSONObject pendingFolder;
@@ -97,6 +99,9 @@ public final class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= 30) getWindow().setDecorFitsSystemWindows(true);
         getWindow().getDecorView().setSystemUiVisibility(0);
         preferences = getSharedPreferences("secure_settings", MODE_PRIVATE);
+        operationReceipts = new OperationReceiptStore(
+                getSharedPreferences("operation_receipts", MODE_PRIVATE), PROCESS_EPOCH);
+        operationReceipts.recoverInterrupted();
         workspace = new File(getFilesDir(), "workspace");
         workspace.mkdirs();
         webView = new WebView(this);
@@ -201,8 +206,48 @@ public final class MainActivity extends Activity {
         String action = message.optString("action");
         JSONObject payload = message.optJSONObject("payload");
         if (payload == null) payload = new JSONObject();
+        if (OperationReceiptPolicy.requiresNativeReceipt(action)) {
+            String operationId = message.optString("operationId", "").trim();
+            boolean manualOperation = operationId.isEmpty();
+            if (manualOperation) operationId = "manual-" + java.util.UUID.randomUUID();
+            if (!OperationReceiptPolicy.isValidOperationId(operationId)) {
+                respond(message, null, "Missing or invalid operation ID. No action was executed.");
+                return;
+            }
+            message.put("operationId", operationId);
+            OperationReceiptStore.BeginResult receiptStart = operationReceipts.begin(operationId, action);
+            if (receiptStart.decision != OperationReceiptStore.Decision.STARTED) {
+                message.put("_operationReceiptDuplicate", receiptStart.decision == OperationReceiptStore.Decision.DUPLICATE);
+                message.put("_operationReceiptConflict", receiptStart.decision == OperationReceiptStore.Decision.CONFLICT);
+                message.put("_operationReceiptManual", manualOperation);
+                String state = receiptStart.receipt == null ? "unavailable" : receiptStart.receipt.state;
+                String error;
+                if (receiptStart.decision == OperationReceiptStore.Decision.DUPLICATE) {
+                    error = "Duplicate operation suppressed (receipt state: " + state
+                            + "). This request was not executed again. Inspect the current target before deciding what to do next.";
+                } else if (receiptStart.decision == OperationReceiptStore.Decision.CONFLICT) {
+                    error = "Operation ID conflict: this identifier was already used for a different action. No action was executed.";
+                } else if (receiptStart.decision == OperationReceiptStore.Decision.FULL) {
+                    error = "Native operation receipt storage is full. No side-effecting action was executed; resolve pending receipts before continuing.";
+                } else {
+                    error = "Native operation receipt could not be saved. The action was blocked before execution.";
+                }
+                respond(message, null, error);
+                return;
+            }
+            message.put("_operationReceiptManaged", true);
+            if (manualOperation) message.put("_operationReceiptManual", true);
+        }
         Object result;
         switch (action) {
+            case "listPendingOperationReceipts":
+                result=operationReceipts.listPending();
+                break;
+            case "resolveOperationReceipt": {
+                result=operationReceipts.resolve(
+                        payload.getString("operationId"), payload.getString("observedOutcome"));
+                break;
+            }
             case "agentRunState":
                 agentRunActive=payload.optBoolean("active",false);
                 result=new JSONObject().put("ok",true);break;
@@ -807,12 +852,48 @@ public final class MainActivity extends Activity {
     }
 
     private void respond(JSONObject request, Object result, String error) {
-        outstanding.remove(request.opt("id").toString());
+        outstanding.remove(String.valueOf(request.opt("id")));
+        String operationId = request.optString("operationId", "");
+        boolean duplicate = request.optBoolean("_operationReceiptDuplicate", false);
+        boolean conflict = request.optBoolean("_operationReceiptConflict", false);
+        OperationReceiptStore.Receipt receipt = null;
+        try {
+            if (request.optBoolean("_operationReceiptManaged", false)) {
+                String receiptError = error;
+                if (receiptError == null && result instanceof JSONObject
+                        && ((JSONObject) result).has("ok") && !((JSONObject) result).optBoolean("ok", true)) {
+                    receiptError = "Native action returned false.";
+                }
+                receipt = operationReceipts.finish(operationId, receiptError);
+                if (request.optBoolean("_operationReceiptManual", false) && receipt != null
+                        && "completed".equals(receipt.state)) {
+                    operationReceipts.resolve(operationId, "applied");
+                    receipt = operationReceipts.get(operationId);
+                }
+            } else if (duplicate || conflict) {
+                receipt = operationReceipts.get(operationId);
+            }
+        } catch (Exception ignored) {
+            // Keep the native response path alive; unresolved records remain conservative.
+        }
         if (destroyed) return;
         try {
             JSONObject response = new JSONObject().put("id", request.get("id"))
                     .put("result", result == null ? JSONObject.NULL : result)
                     .put("error", error == null ? JSONObject.NULL : error);
+            if (receipt != null) {
+                response.put("operationReceipt", receipt.toJson(duplicate));
+                boolean uncertain = duplicate || conflict || "unknown".equals(receipt.state) || "started".equals(receipt.state);
+                if (uncertain) {
+                    response.put("recovery", new JSONObject()
+                            .put("category", "outcome_unknown")
+                            .put("retryPolicy", "never")
+                            .put("automaticRetryAllowed", false)
+                            .put("outcomeMayBeUnknown", true)
+                            .put("neverRepeatBlindly", true)
+                            .put("nextStep", "Read the matching current target, compare its state with the intended effect, then resolve the receipt. Never replay this operation blindly."));
+                }
+            }
             String json = response.toString().replace("\u2028", "\\u2028").replace("\u2029", "\\u2029");
             runOnUiThread(() -> {
                 if (!destroyed && webView != null && isHome(webView.getUrl() == null ? "" : webView.getUrl())) {
@@ -1073,6 +1154,7 @@ public final class MainActivity extends Activity {
         if(nativeApproval!=null)nativeApproval.dismiss();
         HttpURLConnection connection = activeConnection;
         if (connection != null) connection.disconnect();
+        if (operationReceipts != null) operationReceipts.markCurrentProcessStartedUnknown();
         worker.shutdownNow();
         outstanding.clear();
         pendingImport = pendingExport = pendingVoice = null;

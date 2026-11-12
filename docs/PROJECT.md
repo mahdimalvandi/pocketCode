@@ -4,7 +4,7 @@
 Pocket Code is a personal Android coding/phone assistant inspired by OpenCode's quiet dark interface. Tools run on the phone. AI inference runs remotely through an existing 9Router endpoint. It is not an official OpenCode client or a full port.
 
 ## Current release
-0.17.0 source candidate, code 17; Android 8+ (minSdk 26), compile/target SDK 35; SDK-only Java native host and bundled Persian RTL web interface. The checked-in `dist/pocket-code-debug.apk` remains the older 0.5.0 build until the next batched build and verification.
+0.19.0 source candidate, code 19; Android 8+ (minSdk 26), compile/target SDK 35; SDK-only Java native host and bundled Persian RTL web interface. The checked-in `dist/pocket-code-debug.apk` remains the older 0.5.0 build until the next batched build and verification.
 
 ## User requirements and implemented behavior
 | Area | Current behavior |
@@ -20,9 +20,10 @@ Pocket Code is a personal Android coding/phone assistant inspired by OpenCode's 
 | Task planning | Local `set_task_plan` / `update_task_step` / `resume_task` / `finish_task` tools; progress panel; 2–10 bounded steps; task state stored per chat session |
 | Persistence | Chat sessions and compact task memory in WebView localStorage; credentials encrypted via Android Keystore |
 | Run control | Persistent stop button appears while the Agent is active; it prevents starting later model/tool operations, disables automatic navigation and warns that in-flight work may still finish |
+| Idempotent execution | Side-effecting tool calls carry chat/run/tool-call-scoped IDs; native receipts are committed before dispatch, duplicates are suppressed, and unresolved outcomes require a matching observation and reconciliation |
 
 ## Agent execution reliability
-Every UI-changing tool action creates a verification checkpoint. The runtime requires a fresh `read_screen` or `capture_screen` observation before another UI action or final response; the model compares that observation with the expected outcome. Android's `ok=true` is treated only as request acceptance. Failures are classified into denial, blocked target, permission, stale UI, unavailable target, transient and unknown categories. Only transient idempotent broad-storage reads may be retried once. UI actions and file mutations are never replayed automatically; ambiguous outcomes must be inspected first. A denied or blocked verification cannot be bypassed by trying a different UI action.
+Every UI-changing tool action creates a verification checkpoint. Side-effecting operations also receive a durable native receipt before dispatch; duplicate IDs are suppressed and unresolved receipts block subsequent side effects until their matching target is observed and reconciled. The runtime requires a fresh `read_screen` or `capture_screen` observation before another UI action or final response; the model compares that observation with the expected outcome. Android's `ok=true` is treated only as request acceptance. Failures are classified into denial, blocked target, permission, stale UI, unavailable target, transient and unknown categories. Only transient idempotent broad-storage reads may be retried once. UI actions and file mutations are never replayed automatically; ambiguous outcomes must be inspected first. A denied or blocked verification cannot be bypassed by trying a different UI action.
 
 ## Tool batching
 The Agent can receive up to three independent `phone_storage_roots` / `read_phone_storage` calls in one model response and execute them sequentially through the existing native worker, reducing model round-trips without parallel native actions. Batching is disabled for active/paused task plans, UI verification checkpoints, mixed calls, approval-gated operations and all mutations. Batch file text is capped at 48,000 characters per file and 120,000 characters total; truncation is disclosed. Individual reads retain their existing behavior.

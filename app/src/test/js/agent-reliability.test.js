@@ -79,3 +79,30 @@ test('a denied or blocked verification cannot be bypassed with another UI action
   assert.equal(policy.blockedAfterUnverified(stale, 'click_element'), true);
   assert.equal(policy.blockedAfterUnverified(stale, 'phone_back'), false);
 });
+
+test('native receipt IDs are required for side-effecting Agent tools, not reads', () => {
+  for (const name of ['open_app','click_element','tap_screen','type_text','scroll_element','phone_back','write_file','write_phone_file','delete_file']) {
+    assert.equal(policy.requiresOperationReceipt(name), true, name);
+  }
+  for (const name of ['read_screen','capture_screen','read_file','read_phone_storage','list_files']) {
+    assert.equal(policy.requiresOperationReceipt(name), false, name);
+  }
+});
+
+test('receipt reconciliation permits only the matching read surface', () => {
+  assert.equal(policy.isReceiptObservationFor('writeFile','read_file'), true);
+  assert.equal(policy.isReceiptObservationFor('writeFile','read_phone_file'), false);
+  assert.equal(policy.isReceiptObservationFor('deleteFile','list_files'), true);
+  assert.equal(policy.isReceiptObservationFor('writeShared','read_phone_file'), true);
+  assert.equal(policy.isReceiptObservationFor('writeShared','read_screen'), false);
+  assert.equal(policy.isReceiptObservationFor('click_element','read_screen'), true);
+});
+
+test('duplicate native operation receipts are never retryable', () => {
+  const recovery = policy.classifyFailure('click_element','Duplicate operation suppressed (receipt state: completed).');
+  assert.equal(recovery.category,'outcome_unknown');
+  assert.equal(recovery.retryPolicy,'never');
+  assert.equal(recovery.automaticRetryAllowed,false);
+  assert.equal(recovery.outcomeMayBeUnknown,true);
+  assert.equal(recovery.neverRepeatBlindly,true);
+});
