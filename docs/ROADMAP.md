@@ -4,8 +4,8 @@ This roadmap separates implemented source work from capabilities that still need
 
 ## Current work
 
-- [x] **Per-app permission policy (v0.18.0 source candidate):** native package-scoped enforcement with read-only, navigation, confirm-actions and blocked modes. New apps default to confirm-actions. Real-device behavior is still unverified; the v0.18.0 source has not been built or tested.
-- [x] **Idempotent action execution (v0.19.0 source candidate):** stable chat/run/tool-call IDs, durable Native receipts, duplicate suppression, interruption recovery and observation-based reconciliation. Source and test cases are written but remain unbuilt, untested and unverified on a phone.
+- [x] **Per-app permission policy (v0.18.0):** native package-scoped enforcement with read-only, navigation, confirm-actions and blocked modes. New apps default to confirm-actions. Included in v0.19.0 CI validation; real-device behavior remains unverified.
+- [x] **Idempotent action execution (v0.19.0 CI-validated):** stable chat/run/tool-call IDs, durable Native receipts, duplicate suppression, interruption recovery and observation-based reconciliation. Automated CI tests and APK build passed; physical-device validation remains outstanding.
 
 ## Next capabilities
 

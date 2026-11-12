@@ -2,21 +2,6 @@ name: Build Android APK
 # Run manually after batching several substantial changes.
 on:
   workflow_dispatch:
-  # One batched validation run for the idempotent-receipt feature.
-  # Keep this path filter narrow so unrelated feature commits do not build automatically.
-  push:
-    branches: [main]
-    paths:
-      - 'app/src/main/java/dev/pocketcode/app/MainActivity.java'
-      - 'app/src/main/java/dev/pocketcode/app/PhoneAccessService.java'
-      - 'app/src/main/java/dev/pocketcode/app/OperationReceipt*.java'
-      - 'app/src/main/assets/app.js'
-      - 'app/src/main/res/values/strings.xml'
-      - 'app/src/main/assets/agent-reliability.js'
-      - 'app/src/test/java/dev/pocketcode/app/OperationReceiptPolicyTest.java'
-      - 'app/src/test/js/agent-reliability.test.js'
-      - 'app/build.gradle'
-      - 'build-apk.sh'
 jobs:
   apk:
     runs-on: ubuntu-latest

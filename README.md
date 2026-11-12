@@ -1,6 +1,6 @@
 # Pocket Code · Android alpha
 
-**Current source candidate: 0.19.0 (personal-testing alpha).** This candidate adds durable native operation receipts and stable operation IDs for side-effecting tool calls. It has not been built, run through the automated test suite, or device-tested yet. The checked-in APK remains the older 0.5.0 build until a batched build and validation. Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
+**Current source candidate: 0.19.0 (CI-validated personal-testing alpha).** This candidate adds durable native operation receipts and stable operation IDs for side-effecting tool calls. GitHub Actions passed all Node checks and suites, 46 JVM tests, Android lint and debug APK assembly. Physical-device behavior has not yet been tested. The tracked APK remains v0.5.0; the new CI-signed APK is available from [validation run #43241519955](https://github.com/mahdimalvandi/pocketCode/actions/runs/43241519955). Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
 
 ## v0.19.0 candidate: idempotent action execution
 
@@ -8,7 +8,7 @@ Every side-effecting Agent tool call receives an ID scoped to the chat, current 
 
 The journal stores generated operation IDs, native action names, states and timestamps only; it does not store tool arguments, file paths, typed text, messages or screen content. Matching an observation to the intended target still depends partly on the Agent selecting and interpreting the correct read result; Native does not independently validate semantic target equality. Receipt metadata is held in app-private SharedPreferences and is not separately encrypted.
 
-This source candidate has not been built, tested or device-verified. No APK has been generated; the checked-in APK remains v0.5.0.
+Automated CI validation and APK generation succeeded. The APK is signed with the CI debug key; it is not guaranteed to upgrade an installation signed with a different local debug key. Physical-device behavior remains unverified, and the tracked APK remains v0.5.0.
 
 ## v0.18.0 candidate: per-app permission policy
 
