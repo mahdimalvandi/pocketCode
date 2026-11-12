@@ -1,7 +1,7 @@
 # Agent handoff / next work
 
 ## Start here
-Current main includes source changes through v0.18.0: persistent stop control, Accessibility/action-safety, voice-wake/transcription hardening, exact storage-root navigation, release provenance and per-app permission policies. The v0.19.0 candidate adds durable native operation receipts and stable IDs for side-effecting tool calls. v0.18.0/v0.19.0 source changes remain unbuilt, untested and device-unverified; the checked-in APK is still v0.5.0.
+Current main includes source changes through v0.19.0: persistent stop control, Accessibility/action-safety, voice-wake/transcription hardening, exact storage-root navigation, release provenance, per-app permission policies and durable native operation receipts. CI run [43241519955](https://github.com/mahdimalvandi/pocketCode/actions/runs/43241519955) passed the Node/JVM suites, lint and APK build. The physical-device matrix remains pending; the tracked APK remains v0.5.0 and the CI artifact has a separate debug signing key.
 
 ## Delivered and verified
 - APK compiled/signed with the original local personal debug key.

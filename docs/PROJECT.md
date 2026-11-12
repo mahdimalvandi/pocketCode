@@ -4,7 +4,7 @@
 Pocket Code is a personal Android coding/phone assistant inspired by OpenCode's quiet dark interface. Tools run on the phone. AI inference runs remotely through an existing 9Router endpoint. It is not an official OpenCode client or a full port.
 
 ## Current release
-0.19.0 source candidate, code 19; Android 8+ (minSdk 26), compile/target SDK 35; SDK-only Java native host and bundled Persian RTL web interface. The checked-in `dist/pocket-code-debug.apk` remains the older 0.5.0 build until the next batched build and verification.
+0.19.0 CI-validated source candidate, code 19; Android 8+ (minSdk 26), compile/target SDK 35; SDK-only Java native host and bundled Persian RTL web interface. The checked-in `dist/pocket-code-debug.apk` remains v0.5.0; the separately published CI artifact contains the new debug build.
 
 ## User requirements and implemented behavior
 | Area | Current behavior |
@@ -55,3 +55,7 @@ No shell, root, arbitrary code runtime, package installation, Git engine, MCP ru
 5. Tap microphone, grant recording permission, start again, speak, finish/transcribe, review and send manually.
 
 Uninstalling removes private workspace/history and keys. Export important data before uninstalling. Debug builds are for personal testing, not a security-audited production product.
+
+## v0.19.0 automated validation
+
+GitHub Actions run [43241519955](https://github.com/mahdimalvandi/pocketCode/actions/runs/43241519955) passed JavaScript syntax checks, all five Node test suites, all 46 JVM test cases, Android lint and debug APK assembly. APK signing (v2), package/version metadata and SHA-256 checksum were verified. Lint completed with 17 warnings; inspect the uploaded report before treating them as resolved. The CI-signed APK is a debug artifact and may not update a local-key-signed installation. Physical-device validation remains outstanding.

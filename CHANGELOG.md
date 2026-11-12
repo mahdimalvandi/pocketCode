@@ -1,13 +1,14 @@
 # Changelog
 
-## 0.19.0 (candidate)
+## 0.19.0 (CI-validated candidate; physical-device validation pending)
 - Added stable operation IDs scoped to chat, Agent run and provider tool call for side-effecting phone/UI/file operations.
 - Added a durable native receipt journal written before execution. Duplicate IDs are suppressed after completion; reusing an ID for a different native action is rejected.
 - Started operations become unknown after process interruption. Completed/unknown receipts gate further side effects until a matching read surface is inspected and the receipt is reconciled as applied, not_applied or uncertain.
 - Receipt metadata stores only operation IDs, action names, states, timestamps and reconciliation outcomes; raw tool arguments, file paths, typed text, messages and screen content are not persisted. Terminal receipts are pruned under capacity pressure; unresolved receipts are never evicted.
 - Added JavaScript reliability and JVM receipt-policy test cases plus physical-device scenarios.
 - Fixed a concurrent-send race by activating the Agent busy state before awaiting microphone handoff.
-- **No tests, lint, build or GitHub Actions were run by request.** The checked-in APK remains v0.5.0; no v0.19.0 APK has been generated.
+- GitHub Actions run [43241519955](https://github.com/mahdimalvandi/pocketCode/actions/runs/43241519955) passed all six JavaScript syntax checks, all five Node test suites, 46 JVM tests (zero failures/errors/skips), Gradle lint and debug APK assembly. APK verification passed with versionCode 19/versionName 0.19.0, APK Signature Scheme v2 and SHA-256 checksum validation. Lint completed with 17 warnings; inspect the uploaded report.
+- The CI artifact is signed with GitHub's debug key and may not upgrade an APK signed with the separate local key. Physical-device validation is still pending; the tracked APK remains v0.5.0.
 
 ## 0.18.0 (candidate)
 - Added per-app Accessibility policies: read-only, navigation, confirm-actions and blocked. Native Java enforces the active package policy before and after approvals; unknown/corrupt policy data fails closed, and built-in system/security packages remain denied.
