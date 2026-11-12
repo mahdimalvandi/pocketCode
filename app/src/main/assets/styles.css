@@ -43,3 +43,9 @@
 .timeline-event.status-failed .timeline-status,.timeline-event.status-denied .timeline-status,.timeline-event.status-unverified .timeline-status{color:#e0a7a3}
 .timeline-event.status-awaiting_approval .timeline-status,.timeline-event.status-awaiting_verification .timeline-status{color:#d9c18d}
 @media(min-width:650px){.timeline-panel{margin-inline:38px}}
+
+.topbar-actions{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.stop-button{min-height:38px;padding:0 11px;border:1px solid #70413f;background:#2a1d1e;color:#efb7b2;border-radius:7px;font-size:11px;white-space:nowrap}
+.stop-button:disabled{opacity:.7;cursor:wait}
+.stop-button:focus-visible{outline:2px solid #efb7b2;outline-offset:3px}
+@media(max-width:380px){.stop-button{padding-inline:8px;font-size:10px}.topbar-actions{gap:2px}}

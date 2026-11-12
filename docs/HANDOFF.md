@@ -1,7 +1,7 @@
 # Agent handoff / next work
 
 ## Start here
-Current main includes merged v0.11.0 tool batching; the active feature branch develops the v0.12.0 execution timeline (source-only, not yet validated). The 0.6 CI build is historical; the 0.7 screenshot and 0.8 visual-tap additions have not been built or device-tested.
+Current main includes merged v0.12.0 execution timeline; the active feature branch develops the v0.13.0 persistent stop control (source-only, not yet validated). The 0.6 CI build is historical; the 0.7 screenshot and 0.8 visual-tap additions have not been built or device-tested.
 
 ## Delivered and verified
 - APK compiled/signed with the original local personal debug key.
@@ -38,7 +38,13 @@ Current main includes merged v0.11.0 tool batching; the active feature branch de
 - Added scheduler tests; not run. Build/CI remains deferred to the user's final batched test cycle.
 
 
-## Current candidate: 0.12.0 execution timeline
+## Current candidate: 0.13.0 persistent stop control
+- Added a stop button in the chat header, visible only while an Agent run is active. Stop state is updated immediately in the WebView and checked before later model/tool operations, including subsequent entries in a batch.
+- Stop also requests that the existing native automatic-navigation setting be disabled. The native bridge uses a serial worker, so that request may wait behind the in-flight call. An already-started model HTTP request or Android action may finish and is not guaranteed to be interrupted or rolled back.
+- Active task plans are paused and unverified UI outcomes remain unverified. A subsequent user turn gets a fresh stop state; automatic navigation remains off until manually re-enabled.
+- Added a pure stop-policy module and Node tests. Not run, not built and not device-tested by request; no Actions run.
+
+## Merged candidate: 0.12.0 execution timeline
 - Added a per-chat collapsible timeline of tool-call metadata: tool label, start time, elapsed duration, bounded status and static note code. The history is capped at 100 events per chat.
 - Logs only static tool identifiers and execution metadata. It deliberately excludes arguments, paths, file contents, typed text, screenshots, chat contents, private model reasoning and raw error strings. Persisted records are restored through an allowlist.
 - The in-app workspace-file confirmation is reflected as awaiting approval. Native Android confirmation dialogs still appear as a running bridge operation until the response returns. UI-changing operations remain awaiting verification after the native request returns; a fresh screen observation changes the matching operation to observed, which is explicitly not the same as success. Failed/denied/unverified/deferred states remain distinguishable.
@@ -50,7 +56,7 @@ Current main includes merged v0.11.0 tool batching; the active feature branch de
 3. **Voice wake mode:** validate physical Android 12+ devices with offline Persian speech installed; test wake phrase false positives, mic handoff, silence detection, background pause/resume, manual-dictation coexistence and Gemini audio transcription. The wake mode is intentionally foreground-only; do not describe it as an always-on background assistant.
 4. **Real Persian speech:** verify router/model audio support and accurate transcription; handle empty/noisy recordings. No generic ASR fallback should silently replace Gemini.
 5. **Prompt/disclosure consistency:** older system prompt/tool descriptions and Android Accessibility description retain per-step approval wording; appended navigation policy overrides it. Consolidate into one authoritative policy and update strings, without weakening native enforcement.
-6. **Stop UX:** stop lives in Access dialog; a persistent, easy-to-reach stop affordance could improve safety. Do not promise cancellation reverses already dispatched effects.
+6. **Stop UX:** v0.13.0 adds a persistent in-run header control and operation-boundary stop gating. The request cannot reliably interrupt an in-flight native operation or roll back side effects; test the behavior during a long model request, UI tool call and file read/write. Do not describe it as hard cancellation.
 7. **Storage navigation:** parent navigation currently uses a depth heuristic; track exact discovered roots instead, especially for removable volumes.
 8. **Tests and release engineering:** add unit/instrumentation coverage, stable signing/release process, license decision and artifact checksums. CI signer differs from personal installed signer.
 

@@ -27,11 +27,13 @@ jobs:
       - run: node --check app/src/main/assets/agent-task-memory.js
       - run: node --check app/src/main/assets/agent-tool-batching.js
       - run: node --check app/src/main/assets/agent-execution-timeline.js
+      - run: node --check app/src/main/assets/agent-run-control.js
       - run: node --check app/src/main/assets/app.js
       - run: node --test app/src/test/js/agent-reliability.test.js
       - run: node --test app/src/test/js/agent-task-memory.test.js
       - run: node --test app/src/test/js/agent-tool-batching.test.js
       - run: node --test app/src/test/js/agent-execution-timeline.test.js
+      - run: node --test app/src/test/js/agent-run-control.test.js
       - run: gradle testDebugUnitTest --no-daemon
       - run: gradle lintDebug --no-daemon
       - run: gradle assembleDebug --no-daemon
@@ -39,7 +41,7 @@ jobs:
         run: |
           APK=app/build/outputs/apk/debug/app-debug.apk
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$APK"
-          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -F "package: name='dev.pocketcode.app' versionCode='12' versionName='0.12.0'"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -F "package: name='dev.pocketcode.app' versionCode='13' versionName='0.13.0'"
           unzip -t "$APK"
       - uses: actions/upload-artifact@v4
         with:

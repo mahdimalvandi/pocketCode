@@ -166,7 +166,7 @@ public final class PhoneAccessService extends AccessibilityService {
                     : action.equals("tap_screen")
                     ? "با تأیید، فقط یک لمس در مختصات نمایش‌داده‌شده روی همین صفحه اجرا می‌شود. این لمس ممکن است اثر واقعی داشته باشد. شناسهٔ تصویر یک‌بارمصرف و کوتاه‌عمر است؛ صفحهٔ فعلی باید با تصویر یکی باشد. برای ارسال، حذف، پرداخت یا هر اقدام حساس از این ابزار استفاده نکن."
                     : "خواندن صفحه، متن قابل مشاهده را از طریق 9Router به مدل می‌فرستد. کلیک می‌تواند اثر واقعی داشته باشد. فقط اگر این مرحله را می‌خواهید تأیید کنید.";
-            approval = new AlertDialog.Builder(this).setTitle("Pocket Code · اجازهٔ این مرحله")
+            AlertDialog.Builder builder=new AlertDialog.Builder(this).setTitle("Pocket Code · اجازهٔ این مرحله")
                 .setMessage(detail + "\n\n" + disclosure)
                 .setNegativeButton("رد کردن", (d,w) -> { if(action.equals("tap_screen"))latestScreenshot=null; finish(null,"User denied this phone action."); })
                 .setPositiveButton("فقط همین مرحله", (d,w) -> {
@@ -182,7 +182,16 @@ public final class PhoneAccessService extends AccessibilityService {
                             finish(execute(action,payload,true),null);
                         } catch (Exception e) { finish(null,e.getMessage()); }
                     }, 350);
-                }).create();
+                });
+            if(MainActivity.isAgentRunActive()){
+                builder.setNeutralButton("توقف Agent", (d,w) -> {
+                    approval=null;
+                    if(action.equals("tap_screen"))latestScreenshot=null;
+                    MainActivity.requestAgentStopFromPhoneApproval();
+                    finish(null,"User stopped the Agent and denied this phone action.");
+                });
+            }
+            approval=builder.create();
             approval.setCanceledOnTouchOutside(false);
             approval.setOnCancelListener(d -> { if(action.equals("tap_screen"))latestScreenshot=null; finish(null,"User cancelled this phone action."); });
             approval.getWindow().setType(WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY);

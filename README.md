@@ -1,12 +1,13 @@
 # Pocket Code · Android alpha
 
-**Current source candidate: 0.12.0 (personal-testing alpha).** The execution timeline is new source-only work and has not been built, run through the automated test suite, or device-tested yet. The checked-in APK remains the older 0.5.0 build until a batched build and validation. Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
+**Current source candidate: 0.13.0 (personal-testing alpha).** This candidate adds a persistent in-run stop control. It has not been built, run through the automated test suite, or device-tested yet. The checked-in APK remains the older 0.5.0 build until a batched build and validation. Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
 
-## v0.12.0 candidate: execution timeline
+## v0.13.0 candidate: persistent stop control
 
-A per-chat local timeline records tool names, start times, durations and bounded execution states. UI-changing actions remain pending until a fresh screen observation is returned; that observation is not itself a claim that the intended action succeeded. The log does not store tool arguments, file paths, file contents, typed text, screenshots or raw error messages. It is limited to 100 events per chat session. This candidate has not been built or tested yet.
+A stop button appears in the chat header while the Agent is running. It immediately marks the current run as stopped in the WebView and prevents another model/tool operation from starting. An already-started 9Router request or phone operation may finish; the control does not undo completed actions or guarantee interruption of native work. Requesting stop also disables automatic navigation, matching the existing Access-tab stop behavior. The in-app file approval and active native Android approval dialogs expose their own stop option, so a modal prompt does not hide the stop path.
 
 ## Documentation / agent onboarding
+
 
 
 Start with [`AGENTS.md`](AGENTS.md), then:

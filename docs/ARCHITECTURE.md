@@ -28,7 +28,8 @@ MainActivity Java dispatcher / native authorization
 - `assets/agent-task-memory.js`: bounded task-plan lifecycle, stable step IDs, step transitions, pause/resume, safe restoration and compact state summaries. Shared by WebView runtime and Node unit tests.
 - `assets/agent-tool-batching.js`: conservative classifier for independent shared-storage read batches. It returns stable tool-call indices and prevents batching when a task plan or UI verification checkpoint is active.
 - `assets/agent-execution-timeline.js`: pure bounded event-history module. It stores only tool identifiers, timestamps, durations, allowlisted states and static note codes; it restores persisted data through an allowlist and is shared with Node tests.
-- `assets/app.js`: session persistence, rendering, async bridge promises, model tool loop, file browsers, voice/Access controls, mandatory post-action readback, bounded recovery, per-session task planning/memory and execution-timeline updates.
+- `assets/agent-run-control.js`: pure per-run stop-state policy; records a stop request, rejects new operation starts and lets an already-started operation reach its normal completion path.
+- `assets/app.js`: session persistence, rendering, async bridge promises, model tool loop, file browsers, voice/Access controls, mandatory post-action readback, bounded recovery, per-session task planning/memory, execution timeline and persistent in-run stop control.
 - `assets/index.html`, `styles.css`: dark Persian-first UI, dialogs, task-progress panel and collapsible per-chat execution timeline.
 
 ## Tool loop
@@ -45,6 +46,10 @@ Recovery policy classifies user denial, blocked target, missing permission, stal
 Task planning tools are handled inside the WebView and never cross the native bridge. Plan data is bounded and excludes screenshots, raw tool payloads and file contents; notes are limited to short operational summaries.
 
 Tool groups: workspace `list_files/read_file/write_file`; selected folder `list_phone_files/read_phone_file/write_phone_file`; broad storage `phone_storage_roots/list_phone_storage/read_phone_storage`; phone `list_apps/open_app/read_screen/capture_screen/tap_screen/click_element/type_text/scroll_element/phone_back`. `capture_screen` is the approved visual fallback when Accessibility text is insufficient. `tap_screen` allows exactly one coordinate tap from that exact image, requires a separate native approval even in automatic mode, and has no swipe/drag/long-press support.
+
+
+## Stop semantics
+A visible header stop control is shown while a user-requested Agent run is active. The WebView immediately marks that run stopped; checks at model/tool boundaries prevent the next 9Router request or tool operation from starting, including later members of a sequential read batch. The existing native automatic-navigation setting is also disabled and the Accessibility automation stop signal is sent through the bridge. Bridge work runs on a single worker queue, so the native automatic-navigation update may wait behind the currently executing native operation. In-app file approval and active native confirmation dialogs expose their own stop action; the native dialog sends the stop event to WebView before returning the denied-operation response. An already-started HTTP request or phone action may complete; the stop control does not cancel it reliably, undo side effects, or promise rollback. Any pending UI verification is marked unverified, and an active task plan is paused for explicit user-directed recovery.
 
 ## Accessibility action identity
 Snapshots collect bounded visible, non-password node text and return IDs scoped to an epoch. Actions verify package, refresh node, compare fingerprint and invalidate IDs afterward. `click_element` searches up to six levels for an enabled clickable ancestor; effective clickability is reported separately from direct clickability. This addresses text-in-clickable-row patterns but not inaccessible canvas controls. Known sensitive/system package names are blocked heuristically.
