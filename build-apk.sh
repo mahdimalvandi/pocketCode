@@ -20,7 +20,7 @@ PY
 "$TOOLS/aapt2" link -o "$OUT/unsigned.apk" -I "$ANDROID_JAR" \
   --manifest "$OUT/AndroidManifest.xml" \
   --min-sdk-version 26 --target-sdk-version 35 \
-  --version-code 16 --version-name 0.16.0 "$OUT/resources.zip"
+  --version-code 17 --version-name 0.17.0 "$OUT/resources.zip"
 "${JAVA}javac" -encoding UTF-8 -source 17 -target 17 \
   -classpath "$ANDROID_JAR" -d "$OUT/classes" \
   "$ROOT"/app/src/main/java/dev/pocketcode/app/*.java
@@ -39,11 +39,26 @@ PY
 "$TOOLS/zipalign" -f 4 "$OUT/unsigned.apk" "$OUT/aligned.apk"
 KEYSTORE="$ROOT/.debug-signing.keystore"
 if [[ ! -f "$KEYSTORE" ]]; then
-  "${JAVA}keytool" -genkeypair -keystore "$KEYSTORE" -storepass android \
-    -keypass android -alias androiddebugkey -keyalg RSA -keysize 2048 \
-    -validity 10000 -dname 'CN=Pocket Code Debug,O=Personal Testing,C=US'
+  ( umask 077
+    "${JAVA}keytool" -genkeypair -keystore "$KEYSTORE" -storepass android \
+      -keypass android -alias androiddebugkey -keyalg RSA -keysize 2048 \
+      -validity 10000 -dname 'CN=Pocket Code Debug,O=Personal Testing,C=US'
+  )
 fi
+chmod 600 "$KEYSTORE"
 "$TOOLS/apksigner" sign --ks "$KEYSTORE" --ks-pass pass:android \
   --key-pass pass:android --out "$ROOT/dist/pocket-code-debug.apk" "$OUT/aligned.apk"
 "$TOOLS/apksigner" verify --verbose "$ROOT/dist/pocket-code-debug.apk"
+(
+  cd "$ROOT/dist"
+  sha256sum pocket-code-debug.apk > pocket-code-debug.apk.sha256
+  sha256sum --check pocket-code-debug.apk.sha256
+  {
+    printf 'applicationId=dev.pocketcode.app\nversionCode=17\nversionName=0.17.0\n'
+    printf 'sourceRevision=%s\n' "$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || printf 'unknown')"
+    printf 'apkSha256=%s\n' "$(sha256sum pocket-code-debug.apk | awk '{print $1}')"
+  } > pocket-code-debug.apk.provenance.txt
+)
 echo "APK: $ROOT/dist/pocket-code-debug.apk"
+echo "SHA256: $ROOT/dist/pocket-code-debug.apk.sha256"
+echo "Provenance: $ROOT/dist/pocket-code-debug.apk.provenance.txt"

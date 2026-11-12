@@ -24,6 +24,25 @@ gradle assembleDebug --no-daemon
 ```
 GitHub workflow `.github/workflows/android.yml` installs Java, SDK and Gradle and uploads `app/build/outputs/apk/debug/app-debug.apk`. CI has its own debug signer and is **not guaranteed to upgrade the manually signed APK**. No production signing credentials are in CI. Do not replace the personal release artifact with a CI build without comparing certificates.
 
+## Artifact integrity and signing provenance
+
+Every local SDK build writes three files under `dist/`:
+- `pocket-code-debug.apk`
+- `pocket-code-debug.apk.sha256`
+- `pocket-code-debug.apk.provenance.txt`
+
+Verify the checksum from that directory with:
+```bash
+cd dist
+sha256sum --check pocket-code-debug.apk.sha256
+cat pocket-code-debug.apk.provenance.txt
+```
+The provenance file records package ID, version code/name, Git revision (or `unknown` for a source archive without Git metadata) and the APK hash. A checksum proves that the artifact bytes match the supplied digest; it does not prove the APK is safe, trustworthy or production-signed.
+
+The local debug keystore is ignored by Git and restricted to owner-only permissions by the SDK build script. Back it up securely outside the repository. Never upload it to GitHub or include it in source archives. CI intentionally uses a separate debug signer; CI artifacts may not upgrade the locally installed APK. The Actions workflow is manual-only.
+
+**License status:** no project license has been selected. Do not add or imply an open-source license until the repository owner chooses one.
+
 ## UI preview
 ```bash
 python3 -m http.server 8765 --bind 127.0.0.1 --directory app/src/main/assets

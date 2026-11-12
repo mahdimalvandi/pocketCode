@@ -76,3 +76,12 @@ Use disposable files and a harmless chat/account. Do not validate payments with 
 
 ## Reporting a failure
 Record app version, Android/OEM, exact task, active package, last tool result/error, whether automatic mode was on, and a redacted screen/tree if useful. Distinguish “model declined to call tool,” “element not exposed,” “native action returned false,” and “action performed but outcome not verified.” A synthetic audio HTTP 200 demonstrates payload acceptance, not faithful transcription.
+
+## Final release artifact checks
+
+- Confirm application ID, versionCode and versionName from the APK metadata.
+- Verify the APK signature and ZIP archive before installation.
+- Verify `sha256sum --check dist/pocket-code-debug.apk.sha256` for a local SDK build, or the matching checksum file for a CI artifact.
+- Keep the provenance file with the APK and confirm its source revision and reported SHA-256 match the artifact.
+- Compare the certificate with the installed personal build before an in-place upgrade. A CI debug signature is not interchangeable with the local personal key.
+- Do not publish the project as open-source under an assumed license; the owner must choose the license.
