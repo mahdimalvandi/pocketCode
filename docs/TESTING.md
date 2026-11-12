@@ -69,7 +69,7 @@ Execution timeline mock checks:
 | Telegram | Open, search contact, click result's ancestor, verify chat header, type draft, cancel send approval, approve disposable send only |
 | Sensitive effects | English/Persian send/delete/payment/share/publish labels; resource-ID and hint semantics; parent-container labels; unlabelled control; model false-negative flag; changed target; exact replacement-text preview |
 | Stop | Stop during model request, pending overlay and between actions; no next action; no undo claim |
-| Audio | Permission denial, 1–60 seconds Persian/English, silence/noise, cancel, pause/background, rotation, router timeout |
+| Audio | Permission denial; 1–60 seconds Persian/English; empty/silent/noisy audio; WAV header validation; malformed/empty/string/text-part router responses; wake false positives and word boundaries; retry backoff/stop; manual-vs-wake microphone ownership; cancel; foreground/background; rotation; timeout; transcript remains review-before-send for manual dictation |
 | Lifecycle | Screen lock, app switch, process death; no claim of reliable background automation |
 
 Use disposable files and a harmless chat/account. Do not validate payments with real funds or sensitive accounts. Screenshots/logs can contain private data: redact before committing.

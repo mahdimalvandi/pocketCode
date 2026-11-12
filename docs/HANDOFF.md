@@ -1,7 +1,7 @@
 # Agent handoff / next work
 
 ## Start here
-Current main includes the v0.13.0 persistent stop control. The v0.14.0 candidate improves Accessibility target resolution, native sensitive-action classification and confirmation previews. Source changes remain unbuilt and untested; the checked-in APK is still v0.5.0.
+Current main includes the v0.13.0 persistent stop control and v0.14.0 Accessibility/action-safety improvements. The v0.15.0 candidate hardens foreground wake recognition and Gemini transcription validation. Source changes remain unbuilt and untested; the checked-in APK is still v0.5.0.
 
 ## Delivered and verified
 - APK compiled/signed with the original local personal debug key.
@@ -53,8 +53,8 @@ Current main includes the v0.13.0 persistent stop control. The v0.14.0 candidate
 ## Highest-priority follow-up
 1. **Actual Telegram reproduction:** the candidate now searches up to sixteen clickable ancestors and returns target class/depth metadata, but this does not prove the original Telegram failure is fixed. Capture a redacted Accessibility tree and exact error on a physical device; do not use blind coordinate taps as a workaround.
 2. **Sensitive-action safety:** native classification now covers common English/Persian side-effect semantics across text, descriptions, IDs, hints, classes and nearby ancestors, and approval previews display intended target plus draft/replacement text. It remains heuristic; validate Telegram and other apps, especially custom icon-only controls and false negatives.
-3. **Voice wake mode:** validate physical Android 12+ devices with offline Persian speech installed; test wake phrase false positives, mic handoff, silence detection, background pause/resume, manual-dictation coexistence and Gemini audio transcription. The wake mode is intentionally foreground-only; do not describe it as an always-on background assistant.
-4. **Real Persian speech:** verify router/model audio support and accurate transcription; handle empty/noisy recordings. No generic ASR fallback should silently replace Gemini.
+3. **Voice wake mode:** code now handles expected no-match/timeouts, bounds recognizer retries and prevents concurrent manual recording/wake recognition. Validate physical Android 12+ devices with offline Persian speech installed: false positives, mic handoff, silence detection, background pause/resume and manual-dictation coexistence. The feature is foreground-only, not an always-on background assistant.
+4. **Real Persian speech:** the WAV header is validated, string/text-part response shapes are accepted and empty/malformed transcripts produce explicit errors. Verify real Persian accuracy and 9Router compatibility on-device with clean, noisy and silent recordings. No generic ASR fallback is used.
 5. **Prompt/disclosure consistency:** the authoritative rule is now aligned in the model prompt, tool descriptions, native onboarding and Accessibility service text. Verify disclosures match actual native behavior; do not weaken native enforcement.
 6. **Stop UX:** v0.13.0 adds a persistent in-run control and operation-boundary gating. Feature implementation is merged; validation only remains. It cannot reliably interrupt an in-flight native operation or roll back side effects.
 7. **Storage navigation:** parent navigation still needs to use the exact root returned by the native adapter, especially for removable volumes.

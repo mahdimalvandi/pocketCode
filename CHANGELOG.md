@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.15.0 (candidate)
+- Bound on-device wake recognizer recovery: expected no-match/speech-timeout results continue normally, while repeated recognizer/service failures use backoff and stop after eight consecutive failures instead of retrying indefinitely.
+- Tightened wake phrase matching to word boundaries, retaining Persian/English spacing variants while rejecting phrases embedded inside longer words.
+- Prevented wake detection and manual dictation from competing for the microphone; native manual recording also checks for an in-flight wake transcription.
+- Validate the locally recorded PCM16 mono 16 kHz WAV header before sending it to the Gemini-selected 9Router model. Empty/malformed response shapes now produce explicit errors; text string and text-part array responses are handled without a generic ASR fallback.
+- Rebuilt the agent prompt/policy literals as safely escaped JavaScript strings after finding a malformed prompt concatenation in v0.14.0.
+- Added JVM tests for wake-phrase boundaries and WAV shape. **Not run, not built or device-tested** by request; physical Persian recognition, false positives and real router transcription accuracy remain pending.
+
 ## 0.14.0 (candidate)
 - Expanded clickable-ancestor resolution from six to sixteen parent levels and returned privacy-safe target class/depth metadata after a click, so deeply nested result rows can be diagnosed without logging message text.
 - Approval previews now show the intended click reason, nearby non-password context and the exact replacement text for `type_text`; the preview is narrower and bounded.

@@ -1,6 +1,10 @@
 # Pocket Code · Android alpha
 
-**Current source candidate: 0.14.0 (personal-testing alpha).** This candidate improves nested Accessibility click resolution, native sensitive-action classification and approval previews. It has not been built, run through the automated test suite, or device-tested yet. The checked-in APK remains the older 0.5.0 build until a batched build and validation. Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
+**Current source candidate: 0.15.0 (personal-testing alpha).** This candidate hardens wake-phrase recognition, microphone handoff and Gemini speech-transcription response validation. It has not been built, run through the automated test suite, or device-tested yet. The checked-in APK remains the older 0.5.0 build until a batched build and validation. Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
+
+## v0.15.0 candidate: voice wake and Persian dictation
+
+On-device wake recognition now retries expected empty results normally but backs off and stops after repeated service failures. Wake phrases use word boundaries, and native mic guards prevent manual dictation and wake detection from starting at the same time. Before upload, the recorded audio must match the expected PCM16 mono 16 kHz WAV format. 9Router responses may contain text or text parts; empty/malformed responses are shown as errors. Gemini remains the only transcription route and manual dictation still requires the user to review and send the transcript.
 
 ## v0.14.0 candidate: Accessibility and action safety
 

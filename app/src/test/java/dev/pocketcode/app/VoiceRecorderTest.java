@@ -58,6 +58,21 @@ public class VoiceRecorderTest {
         assertArrayEquals(samples,Arrays.copyOfRange(wav,44,wav.length));
     }
 
+    @Test public void validatesRecorderWavBeforeSendingToRouter() {
+        byte[] valid=VoiceRecorder.encodeWav(pcm((short)300,(short)-300));
+        assertTrue(VoiceRecorder.isValidPcm16MonoWav(valid));
+
+        byte[] wrongRate=Arrays.copyOf(valid,valid.length);
+        ByteBuffer.wrap(wrongRate).order(ByteOrder.LITTLE_ENDIAN).putInt(24,8000);
+        assertFalse(VoiceRecorder.isValidPcm16MonoWav(wrongRate));
+    }
+
+    @Test public void rejectsTruncatedAndOversizedWav() {
+        assertFalse(VoiceRecorder.isValidPcm16MonoWav(new byte[43]));
+        byte[] tooLarge=new byte[44+16000*2*60+2];
+        assertFalse(VoiceRecorder.isValidPcm16MonoWav(tooLarge));
+    }
+
     @Test(expected=IllegalArgumentException.class)
     public void rejectsOddLengthPcmForWav() {
         VoiceRecorder.encodeWav(new byte[]{1});
