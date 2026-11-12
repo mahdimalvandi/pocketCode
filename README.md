@@ -1,6 +1,10 @@
 # Pocket Code · Android alpha
 
-**Current source candidate: 0.17.0 (personal-testing alpha).** This candidate adds SHA-256 and source-provenance files to local and manual CI APK builds; it keeps local and CI signing identities separate. It has not been built, run through the automated test suite, or device-tested yet. The checked-in APK remains the older 0.5.0 build until a batched build and validation. Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
+**Current source candidate: 0.18.0 (personal-testing alpha).** This candidate adds native per-app permission policies for cross-app Accessibility; it has not been built, run through the automated test suite, or device-tested yet. The checked-in APK remains the older 0.5.0 build until a batched build and validation. Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
+
+## v0.18.0 candidate: per-app permission policy
+
+Each launchable app has an independent policy in **دسترسی‌ها**: read-only, navigation, confirm actions or blocked. Native Java checks the active package before every Accessibility operation; the model cannot downgrade the selected policy. New apps default to confirm actions: every click, text replacement and visual tap requires a native approval, while screen reading and navigation still depend on the global automatic-navigation opt-in. Built-in system/security/financial package blocks remain non-overridable. This source candidate has not been built, run through tests or device-tested. The checked-in APK remains v0.5.0.
 
 ## v0.17.0 candidate: release integrity
 
@@ -32,6 +36,7 @@ Start with [`AGENTS.md`](AGENTS.md), then:
 - [Security and privacy model](docs/SECURITY.md)
 - [Development, build and release](docs/DEVELOPMENT.md)
 - [Testing plan](docs/TESTING.md) and [actual verification log](VERIFICATION.md)
+- [Product and engineering roadmap](docs/ROADMAP.md)
 - [Next-agent handoff and open issues](docs/HANDOFF.md)
 - [Changelog](CHANGELOG.md)
 

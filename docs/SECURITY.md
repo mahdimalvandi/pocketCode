@@ -11,8 +11,11 @@ Chat text, tool-returned filenames/content, approved or automatically read scree
 |---|---|
 | Broad storage read | Saved consent AND current OS permission checked natively |
 | Workspace / SAF read or app listing/open | Native approval unless automatic navigation opted in |
-| Ordinary Accessibility actions | Overlay approval unless automatic navigation opted in |
-| Sensitive click | Model `sensitive` metadata plus native label/view-ID checks; unknown targets prompt |
+| Ordinary Accessibility actions | Native per-package policy checked before execution; allowed read/navigation operations still require overlay approval unless automatic navigation is opted in |
+| Read-only / navigation app policy | Native package-scoped allowlist: read-only allows screen reads, navigation adds scroll/back; disallowed actions are rejected before execution |
+| Confirm-actions app policy | Screen reads and navigation follow the global automatic-navigation consent; every click, text replacement and visual tap requires a native per-operation approval |
+| Blocked app policy | All screen reads, app launches and Accessibility actions for that package are denied |
+| Sensitive click | Model `sensitive` metadata plus native label/view-ID/hint/class and nearby-ancestor checks; unknown targets prompt |
 | File write/delete | Native per-operation confirmation |
 | Enable permissions | User manually operates Android settings; app cannot self-grant |
 | Audio | OS microphone permission; user starts dictation or explicitly enables foreground wake mode. Wake phrase is on-device; post-wake command audio is sent to 9Router and auto-submitted to the agent. |
@@ -22,6 +25,7 @@ Chat text, tool-returned filenames/content, approved or automatically read scree
 All-files permission itself grants writing; application read-only behavior is not OS-enforced. SAF grants can include write permission but handlers still ask. Automatic classification cannot guarantee prevention of all unintended sends/deletions. Use only harmless test apps/data until physical-device review is complete.
 
 ## Known weaknesses
+- Per-app policies are stored locally by package name. New apps default to `confirm_actions`; corrupt/unknown policy values fail closed to `read_only`. The policy only narrows what the Agent can do; it does not override built-in system/security/financial package blocks or the global automatic-navigation opt-in.
 - Sensitive-app package and button-label rules are heuristics; custom controls, translations and misleading labels can evade them or trigger false positives. Screenshot blocking uses the same package-name heuristics and is not a complete sensitive-screen classifier.
 - Password-marked nodes are omitted, but not every secret is marked as a password. Complete FLAG_SECURE/sensitive-content detection is not implemented; Android may return a black/rejected screenshot for secure windows, but no guarantee is made.
 - Accessibility targets can change between observations; fingerprints/package checks reduce but do not eliminate UI races. Visual-tap tokens also cannot detect every in-place content change within the same window; the user must inspect the target and approval dialog. The sensitive-label deny-list is heuristic and is not a safety guarantee. Android `dispatchGesture` cancels gestures already in progress.
