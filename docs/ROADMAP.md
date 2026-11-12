@@ -21,9 +21,10 @@ This roadmap separates implemented source work from capabilities that still need
 **Required behavior**
 - Persist across new chats and app restarts; this is distinct from the existing per-chat task-plan memory.
 - Retrieve only relevant memory before answering or planning. Do not attach the full profile to every request.
-- Support explicit commands such as “remember this”, “correct that”, “forget this”, plus a UI to inspect, edit, pin and delete stored memories.
+- Support explicit commands such as “remember this”, “correct that” and “forget this”, plus a UI to inspect, edit, pin and delete stored memories.
+- Offer an optional automatic durable-fact capture mode. When enabled, extract stable user context, project changes and researched-entity notes from conversations, but ignore ephemeral chatter, raw screen/file dumps and secrets. Show what was saved and provide immediate undo; keep this mode off until the user explicitly enables it.
 - Store provenance (user-stated, externally researched or inferred), confidence, created/updated/last-verified timestamps and optional expiry. Never present an inference as a user-confirmed fact.
-- For researched people/entities, keep identity disambiguation, concise notes, source URLs and lookup date. Re-check current sources when freshness materially matters; a cached note must not be treated as current news.
+- For researched people/entities, keep identity disambiguation, concise notes, source URLs and lookup date. When the user asks about a person or entity, the Agent should reuse the saved identity/summary instead of repeating discovery; refresh sources when freshness materially matters. A cached note must not be treated as current news.
 - Avoid saving secrets or sensitive personal data by default. Make storage transparent and user-controllable; a memory write should not silently turn an uncertain model guess into a permanent fact.
 - Encrypt persistent records with Android Keystore-backed encryption. Keep them out of WebView localStorage and ordinary unencrypted chat history. Provide per-item deletion and a complete memory wipe.
 
@@ -31,7 +32,7 @@ This roadmap separates implemented source work from capabilities that still need
 1. Define a versioned memory schema and consent/retention rules.
 2. Add a native encrypted SQLite repository and deterministic CRUD/search APIs.
 3. Add explicit save/correct/forget tools and a user-facing memory manager.
-4. Add bounded keyword/FTS retrieval first; introduce embeddings only if actual usage shows lexical retrieval is insufficient.
+4. Start with bounded keyword matching over a small set of records decrypted transiently in memory. Do not persist a plaintext FTS index beside encrypted memory. Consider a separately protected search index or embeddings only if real usage justifies the added complexity.
 5. Add model instructions for provenance, relevance, conflict resolution and freshness checks.
 
 **Acceptance criteria**
@@ -40,6 +41,7 @@ This roadmap separates implemented source work from capabilities that still need
 - User corrections replace stale values without creating contradictory duplicates.
 - A deleted item is not retrieved again; complete wipe removes all personal-memory records and search indexes.
 - Sensitive/secret values are not persisted by default; user can inspect what has been saved.
+- Automatic capture is disabled by default, can be enabled/disabled at any time, and saved items can be undone/deleted from the memory manager.
 
 ### 2. Idempotent action execution
 
