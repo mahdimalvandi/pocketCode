@@ -4,12 +4,13 @@
 
 ## Automated/local baseline
 - `node --check app/src/main/assets/agent-reliability.js`, `node --check app/src/main/assets/agent-task-memory.js`, `node --check app/src/main/assets/agent-tool-batching.js`, `node --check app/src/main/assets/agent-execution-timeline.js`, `node --check app/src/main/assets/agent-run-control.js` and `node --check app/src/main/assets/app.js`.
-- `node --test app/src/test/js/agent-reliability.test.js` (verification gating, failure classification and retry safety).
+- `node --test app/src/test/js/agent-reliability.test.js` (verification gating, native receipt requirements, matching observation surfaces, failure classification and retry safety).
 - `node --test app/src/test/js/agent-task-memory.test.js` (plan validation, bounded/sanitized storage, ordered step transitions, completion checks, blocked steps and explicit resume).
 - `node --test app/src/test/js/agent-tool-batching.test.js` (batch safety classification, bounds, task/verification gating and mixed-call fallback).
 - `node --test app/src/test/js/agent-execution-timeline.test.js` (event bounds, persistence sanitization, duration/status transitions, approval states, UI-verification states and failure classification).
 - `node --test app/src/test/js/agent-run-control.test.js` (immediate stop state, idempotent requests, operation-boundary gating and in-flight completion semantics).
-- `gradle testDebugUnitTest` (wake-phrase normalization, PCM RMS threshold, trailing-silence state transitions, WAV header/encoding, visual-tap coordinate mapping, sensitive-label deny-list and per-app permission-policy matrix).
+- `gradle testDebugUnitTest` (wake-phrase normalization, PCM RMS threshold, trailing-silence state transitions, WAV header/encoding, visual-tap coordinate mapping, sensitive-label deny-list, per-app permission-policy matrix and native operation-receipt policy).
+- Receipt policy cases: side-effecting native actions require IDs; duplicate IDs after completion are suppressed; a different native action cannot reuse an ID; interrupted started receipts become unknown; completed/unknown receipts block further side effects until a matching read surface is inspected and reconciliation is recorded; uncertain stays blocked; unavailable/full receipt storage fails closed.
 - Per-app policy matrix: verify read_only blocks scroll/back/click/type/tap; navigation permits scroll/back but blocks click/type/tap; confirm_actions requires native confirmation for every click/type/tap; blocked denies app launch and all Accessibility actions; unknown policy values fail closed to read_only.
 - `gradle lintDebug` and `gradle assembleDebug`.
 - Verify debug APK with `apksigner`, confirm package/version metadata with `aapt dump badging`, and check ZIP integrity with `unzip -t`.
@@ -53,6 +54,16 @@ Execution timeline mock checks:
 - UI-changing actions remain awaiting_verification after Android accepts the request; a fresh read_screen/capture_screen changes the matching action event to observed, while denied/missing observations produce unverified. Never label observed as successful completion.
 - Switch chats, create a new chat and restore persisted history. Verify a maximum of 100 events per chat, safe handling of malformed localStorage data and no cross-session mixing.
 - Inspect localStorage payloads: no tool args, full paths, contents, typed strings, screenshots, chat text, model reasoning or raw error strings may appear in timeline records. Confirm DOM renders all fields via textContent.
+
+## Idempotent receipt validation (required in the final batched device cycle)
+
+- Perform a harmless click/type/scroll/back action and confirm its native receipt is committed before dispatch and then appears as completed.
+- Interrupt Pocket Code during a native approval or operation; after reopening, confirm started receipts become unknown and all new side effects remain blocked until a fresh matching observation and reconciliation.
+- Replay the same operation ID after completion and confirm the second action is suppressed. Reuse that ID for a different action and confirm conflict rejection.
+- Simulate a lost file-write response. Read the exact workspace target with read_file or selected SAF target with read_phone_file before reconciliation; do not retry blindly.
+- Verify applied, not_applied and uncertain outcomes. Uncertain must remain pending and must not unlock more actions.
+- Fill the receipt journal using harmless test actions; confirm resolved/failed entries are pruned before unresolved records and a journal full of unresolved entries blocks new effects.
+- Confirm records contain no paths, typed strings, messages, tool arguments, screen text or screenshots. Do not use real sending, deleting or payment actions for initial validation.
 
 ## Physical-device matrix (still required)
 | Area | Cases |

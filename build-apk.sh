@@ -20,7 +20,7 @@ PY
 "$TOOLS/aapt2" link -o "$OUT/unsigned.apk" -I "$ANDROID_JAR" \
   --manifest "$OUT/AndroidManifest.xml" \
   --min-sdk-version 26 --target-sdk-version 35 \
-  --version-code 18 --version-name 0.18.0 "$OUT/resources.zip"
+  --version-code 19 --version-name 0.19.0 "$OUT/resources.zip"
 "${JAVA}javac" -encoding UTF-8 -source 17 -target 17 \
   -classpath "$ANDROID_JAR" -d "$OUT/classes" \
   "$ROOT"/app/src/main/java/dev/pocketcode/app/*.java
@@ -54,7 +54,7 @@ chmod 600 "$KEYSTORE"
   sha256sum pocket-code-debug.apk > pocket-code-debug.apk.sha256
   sha256sum --check pocket-code-debug.apk.sha256
   {
-    printf 'applicationId=dev.pocketcode.app\nversionCode=18\nversionName=0.18.0\n'
+    printf 'applicationId=dev.pocketcode.app\nversionCode=19\nversionName=0.19.0\n'
     printf 'sourceRevision=%s\n' "$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || printf 'unknown')"
     printf 'apkSha256=%s\n' "$(sha256sum pocket-code-debug.apk | awk '{print $1}')"
   } > pocket-code-debug.apk.provenance.txt

@@ -17,12 +17,17 @@ Chat text, tool-returned filenames/content, approved or automatically read scree
 | Blocked app policy | All screen reads, app launches and Accessibility actions for that package are denied |
 | Sensitive click | Model `sensitive` metadata plus native label/view-ID/hint/class and nearby-ancestor checks; unknown targets prompt |
 | File write/delete | Native per-operation confirmation |
+| Side-effecting Agent tools | Native receipt committed before dispatch; duplicate IDs blocked; completed/unknown operations gate later side effects until a matching observation and reconciliation |
 | Enable permissions | User manually operates Android settings; app cannot self-grant |
 | Audio | OS microphone permission; user starts dictation or explicitly enables foreground wake mode. Wake phrase is on-device; post-wake command audio is sent to 9Router and auto-submitted to the agent. |
 | Screen image | Every `capture_screen` call requires native per-request approval, even in automatic mode; known blocked packages rejected; image attached in memory to the current Agent run only and not saved locally. |
 | Visual tap | Exactly one `dispatchGesture` tap per request; explicit native approval even in automatic mode; one-use screenshot token expires after 20 seconds and must match package/window/bounds; coordinates must fall inside the app window; obvious sensitive labels are denied heuristically. |
 
 All-files permission itself grants writing; application read-only behavior is not OS-enforced. SAF grants can include write permission but handlers still ask. Automatic classification cannot guarantee prevention of all unintended sends/deletions. Use only harmless test apps/data until physical-device review is complete.
+
+## Operation receipt data
+
+The native journal is held in app-private SharedPreferences. It contains generated operation IDs, native action names, state, timestamps and an optional reconciliation outcome only; it does not persist tool arguments, file paths, typed text, messages or screen content. Receipt metadata is not separately encrypted. Resolved/failed terminal entries are retained for up to 30 days and are pruned first under capacity pressure; started, completed and unknown entries are never evicted. A journal full of unresolved operations blocks new side effects.
 
 ## Known weaknesses
 - Per-app policies are stored locally by package name. New apps default to `confirm_actions`; corrupt/unknown policy values fail closed to `read_only`. The policy only narrows what the Agent can do; it does not override built-in system/security/financial package blocks or the global automatic-navigation opt-in.

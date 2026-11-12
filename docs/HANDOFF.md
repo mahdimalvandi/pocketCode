@@ -1,7 +1,7 @@
 # Agent handoff / next work
 
 ## Start here
-Current main includes the v0.13.0 persistent stop control, v0.14.0 Accessibility/action-safety improvements, v0.15.0 voice-wake/transcription hardening and v0.16.0 exact storage-root navigation. The v0.17.0 candidate adds SHA-256 and provenance output to local/manual-CI builds. Source changes remain unbuilt and untested; the checked-in APK is still v0.5.0.
+Current main includes source changes through v0.18.0: persistent stop control, Accessibility/action-safety, voice-wake/transcription hardening, exact storage-root navigation, release provenance and per-app permission policies. The v0.19.0 candidate adds durable native operation receipts and stable IDs for side-effecting tool calls. v0.18.0/v0.19.0 source changes remain unbuilt, untested and device-unverified; the checked-in APK is still v0.5.0.
 
 ## Delivered and verified
 - APK compiled/signed with the original local personal debug key.

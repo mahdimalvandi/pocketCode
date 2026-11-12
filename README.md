@@ -1,6 +1,14 @@
 # Pocket Code · Android alpha
 
-**Current source candidate: 0.18.0 (personal-testing alpha).** This candidate adds native per-app permission policies for cross-app Accessibility; it has not been built, run through the automated test suite, or device-tested yet. The checked-in APK remains the older 0.5.0 build until a batched build and validation. Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
+**Current source candidate: 0.19.0 (personal-testing alpha).** This candidate adds durable native operation receipts and stable operation IDs for side-effecting tool calls. It has not been built, run through the automated test suite, or device-tested yet. The checked-in APK remains the older 0.5.0 build until a batched build and validation. Standalone Android assistant; not an official OpenCode client. AI runs through 9Router, tools run on the phone.
+
+## v0.19.0 candidate: idempotent action execution
+
+Every side-effecting Agent tool call receives an ID scoped to the chat, current run and provider tool-call ID. Native Android commits a receipt before dispatching the action and suppresses duplicate IDs, including after completion. Reusing an ID for a different native action is rejected. If the app process is interrupted, unfinished operations become unknown. Completed and unknown receipts block further side effects until the Agent inspects the matching screen or file surface and records whether the effect was applied, not applied or remains uncertain. If the receipt store is unavailable or full of unresolved operations, new side effects fail closed.
+
+The journal stores generated operation IDs, native action names, states and timestamps only; it does not store tool arguments, file paths, typed text, messages or screen content. Matching an observation to the intended target still depends partly on the Agent selecting and interpreting the correct read result; Native does not independently validate semantic target equality. Receipt metadata is held in app-private SharedPreferences and is not separately encrypted.
+
+This source candidate has not been built, tested or device-verified. No APK has been generated; the checked-in APK remains v0.5.0.
 
 ## v0.18.0 candidate: per-app permission policy
 

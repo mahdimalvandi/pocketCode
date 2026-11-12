@@ -5,6 +5,7 @@ This roadmap separates implemented source work from capabilities that still need
 ## Current work
 
 - [x] **Per-app permission policy (v0.18.0 source candidate):** native package-scoped enforcement with read-only, navigation, confirm-actions and blocked modes. New apps default to confirm-actions. Real-device behavior is still unverified; the v0.18.0 source has not been built or tested.
+- [x] **Idempotent action execution (v0.19.0 source candidate):** stable chat/run/tool-call IDs, durable Native receipts, duplicate suppression, interruption recovery and observation-based reconciliation. Source and test cases are written but remain unbuilt, untested and unverified on a phone.
 
 ## Next capabilities
 
@@ -43,22 +44,18 @@ This roadmap separates implemented source work from capabilities that still need
 - Sensitive/secret values are not persisted by default; user can inspect what has been saved.
 - Automatic capture is disabled by default, can be enabled/disabled at any time, and saved items can be undone/deleted from the memory manager.
 
-### 2. Idempotent action execution
-
-Add a stable operation ID and native receipt/state machine with started, completed, failed and unknown states for actions that can cause side effects. A bridge timeout must not cause the Agent to resend a message, submit a form or repeat a deletion blindly. Before retrying an operation with unknown outcome, inspect the target app and reconcile actual state.
-
-### 3. Secure chat history and retention
+### 2. Secure chat history and retention
 
 Move chat persistence out of plain WebView localStorage into a native encrypted store. Add per-chat deletion, clear-all, retention limits and an explicit distinction between chat history, execution timeline, task plans and long-term personal memory. Avoid retaining private screenshots or raw phone content in diagnostics.
 
-### 4. Structured UI postcondition verification
+### 3. Structured UI postcondition verification
 
 Supplement model judgment with deterministic checks for common outcomes (correct app/package, recipient/header, composer content, dialog state and visible success/error indicators). Do not claim full semantic verification; expose verified, failed or unknown with the evidence used.
 
-### 5. Privacy-safe diagnostics
+### 4. Privacy-safe diagnostics
 
 Add an explicit user-approved diagnostic export containing app version, Android version, target package, action name, failure category, control class/ancestor depth and operation IDs. Exclude message text, screen content, filenames, credentials and screenshots by default; preview the bundle before export.
 
-### 6. Documentation reconciliation
+### 5. Documentation reconciliation
 
 Update stale handoff, security and onboarding statements so documented version, actual source behavior, permission matrix and unverified device limitations remain aligned.

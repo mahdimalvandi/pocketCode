@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.19.0 (candidate)
+- Added stable operation IDs scoped to chat, Agent run and provider tool call for side-effecting phone/UI/file operations.
+- Added a durable native receipt journal written before execution. Duplicate IDs are suppressed after completion; reusing an ID for a different native action is rejected.
+- Started operations become unknown after process interruption. Completed/unknown receipts gate further side effects until a matching read surface is inspected and the receipt is reconciled as applied, not_applied or uncertain.
+- Receipt metadata stores only operation IDs, action names, states, timestamps and reconciliation outcomes; raw tool arguments, file paths, typed text, messages and screen content are not persisted. Terminal receipts are pruned under capacity pressure; unresolved receipts are never evicted.
+- Added JavaScript reliability and JVM receipt-policy test cases plus physical-device scenarios.
+- Fixed a concurrent-send race by activating the Agent busy state before awaiting microphone handoff.
+- **No tests, lint, build or GitHub Actions were run by request.** The checked-in APK remains v0.5.0; no v0.19.0 APK has been generated.
+
 ## 0.18.0 (candidate)
 - Added per-app Accessibility policies: read-only, navigation, confirm-actions and blocked. Native Java enforces the active package policy before and after approvals; unknown/corrupt policy data fails closed, and built-in system/security packages remain denied.
 - Added a searchable per-app policy editor in Access settings. New apps default to confirm-actions; clicks, text replacement and visual taps always receive a native approval in that mode, even with global automatic navigation enabled.
